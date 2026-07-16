@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Sharks · Emergency Cleanings Internal Tools</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦈</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy-deep: #0a0f1e;
+    --navy: #1e2a3a;
+    --navy-card: #16202e;
+    --teal: #00a19a;
+    --teal-dark: #008a84;
+    --orange: #ff6b00;
+    --white: #ffffff;
+    --muted: #9aa7b8;
+    --line: rgba(255,255,255,0.08);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: var(--navy-deep);
+    color: var(--white);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  header {
+    background: var(--white);
+    padding: 14px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  header img { height: 52px; width: auto; display: block; }
+  .badge {
+    background: var(--navy-deep);
+    color: var(--white);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 8px 18px;
+    border-radius: 50px;
+    white-space: nowrap;
+  }
+  main {
+    flex: 1;
+    width: 100%;
+    max-width: 1060px;
+    margin: 0 auto;
+    padding: 56px 24px 72px;
+  }
+  .eyebrow {
+    color: var(--orange);
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-align: center;
+  }
+  h1 {
+    font-weight: 900;
+    font-size: clamp(34px, 5vw, 52px);
+    line-height: 1.15;
+    text-align: center;
+    margin: 10px 0 12px;
+  }
+  h1 .shark { font-size: 0.85em; }
+  .sub {
+    color: var(--muted);
+    text-align: center;
+    max-width: 560px;
+    margin: 0 auto 48px;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 22px;
+  }
+  .card {
+    background: var(--navy);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 28px 26px 26px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: transform 0.18s ease, border-color 0.18s ease;
+  }
+  .card:hover { transform: translateY(-4px); border-color: var(--teal); }
+  .card .icon {
+    width: 46px; height: 46px;
+    border-radius: 12px;
+    background: rgba(0,161,154,0.14);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+  }
+  .card h2 { font-size: 20px; font-weight: 700; }
+  .card p { color: var(--muted); font-size: 14px; line-height: 1.6; flex: 1; }
+  .card .url {
+    color: var(--teal);
+    font-size: 12.5px;
+    font-weight: 500;
+    word-break: break-all;
+    margin-bottom: 6px;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: var(--teal);
+    color: var(--white);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
+    padding: 12px 26px;
+    border-radius: 50px;
+    transition: background 0.18s ease;
+    align-self: flex-start;
+  }
+  .btn:hover { background: var(--teal-dark); }
+  .btn svg { width: 14px; height: 14px; }
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 22px 24px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+  }
+  footer strong { color: var(--white); font-weight: 600; }
+</style>
+</head>
+<body>
+  <header>
+    <img src="https://emergencycleanings.com/wp-content/uploads/2026/07/Final-logo-for-buyer-png.png" alt="Emergency Cleanings Logo">
+    <span class="badge">Internal · Team Only</span>
+  </header>
+
+  <main>
+    <p class="eyebrow">Emergency Cleanings</p>
+    <h1><span class="shark">🦈</span> Sharks Dashboard</h1>
+    <p class="sub">One place for the team's internal tools. Bookmark this page — new tools will be added here as we build them.</p>
+
+    <div class="grid">
+      <div class="card">
+        <div class="icon">🧮</div>
+        <h2>Sales Calculator</h2>
+        <p>Internal sales pricing calculator for quoting jobs.</p>
+        <span class="url">salescalc2.emergencycleanings.com</span>
+        <a class="btn" href="https://salescalc2.emergencycleanings.com" target="_blank" rel="noopener">Open Tool
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17L17 7M9 7h8v8"/></svg>
+        </a>
+      </div>
+
+      <div class="card">
+        <div class="icon">📊</div>
+        <h2>Sales Stages</h2>
+        <p>Reference for our sales pipeline stages and how deals move through them.</p>
+        <span class="url">stages.emergencycleanings.com</span>
+        <a class="btn" href="https://stages.emergencycleanings.com" target="_blank" rel="noopener">Open Tool
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17L17 7M9 7h8v8"/></svg>
+        </a>
+      </div>
+
+      <div class="card">
+        <div class="icon">📰</div>
+        <h2>Tech News</h2>
+        <p>News and updates for our field technicians.</p>
+        <span class="url">tech-news.emergencycleanings.com</span>
+        <a class="btn" href="https://tech-news.emergencycleanings.com" target="_blank" rel="noopener">Open Tool
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17L17 7M9 7h8v8"/></svg>
+        </a>
+      </div>
+
+      <div class="card">
+        <div class="icon">🤝</div>
+        <h2>Client Calculator</h2>
+        <p>Client-facing project estimate calculator.</p>
+        <span class="url">clientcalc.emergencycleanings.com</span>
+        <a class="btn" href="https://clientcalc.emergencycleanings.com" target="_blank" rel="noopener">Open Tool
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17L17 7M9 7h8v8"/></svg>
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <strong>Emergency Cleanings</strong> · Internal team dashboard · Not for public distribution
+  </footer>
+</body>
+</html>
