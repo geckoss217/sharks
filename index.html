@@ -335,7 +335,7 @@
       <div class="sect-head">
         <p class="eyebrow">Daily Activity</p>
         <h2 class="sect-title">Communication Summary</h2>
-        <p class="sect-sub">Calls and texts per rep from the daily communication log. Pick your initials and a metric — every number compares you to the team average for the same period. The EC-Sales toll-free queue is listed separately and is not counted in the team average.</p>
+        <p class="sect-sub">Calls and texts per rep from the daily communication log. Pick your initials and a metric — every number compares you to the team average for the same period. The EC-Sales toll-free queue is listed separately and is not counted in the team average. Queue calls a rep personally answered show under the Queue metrics, or use an &ldquo;incl. queue&rdquo; metric for their full workload.</p>
       </div>
 
       <div id="commbody">
@@ -396,14 +396,21 @@ function commInit(){
   const isQueue = k => Object.prototype.hasOwnProperty.call(QUEUE, k);
   if (!reps.length || !AS_OF) { $('commbody').style.display='none'; $('commEmpty').style.display='block'; return; }
 
-  // row: [offset, ic, ia, im, oc, ocn, tt, si, so]  offset = days before AS_OF
+  // row: [offset, ic, ia, im, oc, ocn, tt, si, so, qc, qt]  offset = days before AS_OF
+  // qc/qt = toll-free queue calls this rep personally answered + their talk time.
+  // They are NOT inside ic/tt, so "total" metrics add the two together.
+  const q = (r,i) => r[i] || 0;   // older rows predate the queue columns
   const METRICS = [
     {k:'touch', label:'Total Touches (calls out + SMS out)', f:r=>r[4]+r[8], dec:0},
     {k:'oc',  label:'Outbound Calls',     f:r=>r[4], dec:0},
     {k:'ocn', label:'Outbound Connected', f:r=>r[5], dec:0},
-    {k:'tt',  label:'Talk Time (min)',    f:r=>r[6], dec:1},
+    {k:'tt',  label:'Talk Time — direct only (min)', f:r=>r[6], dec:1},
+    {k:'ttall',label:'Talk Time — incl. queue (min)', f:r=>r[6]+q(r,10), dec:1},
+    {k:'qc',  label:'Queue Calls Answered', f:r=>q(r,9), dec:0},
+    {k:'qt',  label:'Queue Talk Time (min)',f:r=>q(r,10), dec:1},
     {k:'so',  label:'SMS Sent',           f:r=>r[8], dec:0},
-    {k:'ic',  label:'Inbound Calls',      f:r=>r[1], dec:0},
+    {k:'ic',  label:'Inbound Calls — direct only', f:r=>r[1], dec:0},
+    {k:'icall',label:'Inbound Calls — incl. queue', f:r=>r[1]+q(r,9), dec:0},
     {k:'ia',  label:'Inbound Answered',   f:r=>r[2], dec:0},
     {k:'im',  label:'Inbound Missed',     f:r=>r[3], dec:0},
     {k:'si',  label:'SMS Received',       f:r=>r[7], dec:0},
@@ -425,7 +432,7 @@ function commInit(){
   }
   // Reps only — the queue is deliberately excluded from all team math.
   function activeReps(days){
-    return reps.filter(rp => RAW[rp].some(r => r[0] < days && (r[1]+r[3]+r[4]+r[6]+r[7]+r[8])>0));
+    return reps.filter(rp => RAW[rp].some(r => r[0] < days && (r[1]+r[3]+r[4]+r[6]+r[7]+r[8]+q(r,9)+q(r,10))>0));
   }
 
   // order rep selector by 12-week touches, desc
