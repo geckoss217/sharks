@@ -246,6 +246,8 @@
   table.comm tbody tr:hover { background: rgba(0,161,154,0.08); }
   table.comm tbody tr.sel { background: rgba(0,161,154,0.16); }
   table.comm tbody tr.sel td:first-child { color: var(--teal); font-weight: 700; }
+  table.comm tbody tr.qrow { border-top: 2px solid rgba(255,255,255,0.16); }
+  table.comm tbody tr.qrow td:first-child { color: var(--orange); font-weight: 600; }
   table.comm tfoot td { color: var(--muted); font-weight: 600; border-top: 1px solid rgba(255,255,255,0.16); }
   .empty-note { text-align: center; color: var(--muted); padding: 40px 20px; font-size: 14px; }
   @media (max-width: 640px) {
@@ -333,7 +335,7 @@
       <div class="sect-head">
         <p class="eyebrow">Daily Activity</p>
         <h2 class="sect-title">Communication Summary</h2>
-        <p class="sect-sub">Calls and texts per rep from the daily communication log. Pick your initials and a metric — every number compares you to the team average for the same period.</p>
+        <p class="sect-sub">Calls and texts per rep from the daily communication log. Pick your initials and a metric — every number compares you to the team average for the same period. The EC-Sales toll-free queue is listed separately and is not counted in the team average.</p>
       </div>
 
       <div id="commbody">
@@ -384,8 +386,14 @@ const DATA_URL = 'https://sharks-data-geckoss217-3432s-projects.vercel.app/data.
 function commInit(){
   const $ = id => document.getElementById(id);
   const C = window.COMM || {};
-  const RAW = C.RAW || {}, AS_OF = C.AS_OF || '', GEN = C.GEN || '';
+  const RAW = C.RAW || {}, QUEUE = C.QUEUE || {}, AS_OF = C.AS_OF || '', GEN = C.GEN || '';
   const reps = Object.keys(RAW);
+  const queues = Object.keys(QUEUE);
+  // ALL = reps + queue entities. Team totals/averages use `reps` ONLY:
+  // the toll-free queue carries ~3x the inbound volume of every rep combined,
+  // so including it would wreck each rep's "vs team avg" comparison.
+  const ALL = {...RAW, ...QUEUE};
+  const isQueue = k => Object.prototype.hasOwnProperty.call(QUEUE, k);
   if (!reps.length || !AS_OF) { $('commbody').style.display='none'; $('commEmpty').style.display='block'; return; }
 
   // row: [offset, ic, ia, im, oc, ocn, tt, si, so]  offset = days before AS_OF
@@ -410,10 +418,12 @@ function commInit(){
   const fmt = (v,dec) => Number(v.toFixed(dec)).toLocaleString('en-US',{maximumFractionDigits:dec});
 
   function sum(rep, metric, days){
+    const rows = ALL[rep]; if (!rows) return 0;
     let s=0;
-    for (const r of RAW[rep]) if (r[0] < days) s += metric.f(r);
+    for (const r of rows) if (r[0] < days) s += metric.f(r);
     return s;
   }
+  // Reps only — the queue is deliberately excluded from all team math.
   function activeReps(days){
     return reps.filter(rp => RAW[rp].some(r => r[0] < days && (r[1]+r[3]+r[4]+r[6]+r[7]+r[8])>0));
   }
@@ -424,6 +434,12 @@ function commInit(){
 
   const repSel = $('repSel'), metSel = $('metSel');
   order.forEach(rp => repSel.add(new Option(rp, rp)));
+  if (queues.length){
+    const g = document.createElement('optgroup');
+    g.label = 'Shared lines (not in team average)';
+    queues.forEach(q => g.appendChild(new Option(q.replace(' (Queue)', ' — Toll-Free Queue'), q)));
+    repSel.appendChild(g);
+  }
   METRICS.forEach((m,i) => metSel.add(new Option(m.label, i)));
 
   const asOfDate = new Date(AS_OF + 'T12:00:00');
@@ -444,7 +460,7 @@ function commInit(){
       const teamAvg = act.length ? teamTotal/act.length : 0;
       const myAvg = mine/p.days, tAvg = teamAvg/p.days;
       let delta='', cls='';
-      if (teamAvg > 0){
+      if (teamAvg > 0 && !isQueue(rep)){
         const pct = (mine-teamAvg)/teamAvg*100;
         cls = pct>=0 ? 'up':'down';
         delta = (pct>=0?'▲ ':'▼ ') + Math.abs(pct).toFixed(0) + '% vs team avg';
@@ -457,6 +473,7 @@ function commInit(){
         <div class="t-rows">
           ${p.days>1? `<div class="t-row"><span>Your avg / day</span><b>${fmt(myAvg,1)}</b></div>`:''}
           <div class="t-row"><span>Team avg / rep</span><b>${fmt(teamAvg,metric.dec)}</b></div>
+          ${isQueue(rep)? `<div class="t-row"><span>Shared line — excluded from team avg</span><b>&nbsp;</b></div>`:''}
           ${p.days>1? `<div class="t-row"><span>Team avg / rep / day</span><b>${fmt(tAvg,1)}</b></div>`:''}
         </div>
       </div>`;
@@ -515,7 +532,8 @@ function commInit(){
     svg.innerHTML = el;
     svg.setAttribute('height', H);
     $('chartTitle').textContent = 'Weekly trend — ' + metric.label;
-    $('chartSub').textContent = `12 weeks ending ${dfmt(asOfDate)} · bars are ${rep}, dashed line is the team average per rep`;
+    $('chartSub').textContent = `12 weeks ending ${dfmt(asOfDate)} · bars are ${rep}, dashed line is the team average per rep`
+      + (isQueue(rep) ? ' · shared line, not counted in the team average' : '');
 
     // hover tooltips
     const tip = $('tip');
@@ -540,9 +558,13 @@ function commInit(){
     for (const r of rows){
       body += `<tr data-rep="${r.rp}" class="${r.rp===rep?'sel':''}"><td>${r.rp}</td>${r.v.map(v=>`<td>${fmt(v,metric.dec)}</td>`).join('')}</tr>`;
     }
+    for (const q of queues){
+      const v = PERIODS.map(p=>sum(q,metric,p.days));
+      body += `<tr data-rep="${q}" class="qrow ${q===rep?'sel':''}"><td>${q.replace(' (Queue)',' — Toll-Free Queue')}</td>${v.map(x=>`<td>${fmt(x,metric.dec)}</td>`).join('')}</tr>`;
+    }
     $('tbl').tBodies[0].innerHTML = body;
     // footer: team total + avg per active rep
-    let foot='<tr><td>Team total</td>';
+    let foot='<tr><td>Team total (reps only)</td>';
     const totals = PERIODS.map(p => order.reduce((s,rp)=>s+sum(rp,metric,p.days),0));
     foot += totals.map(v=>`<td>${fmt(v,metric.dec)}</td>`).join('') + '</tr><tr><td>Team avg / rep</td>';
     foot += PERIODS.map((p,i) => { const n = activeReps(p.days).length; return `<td>${n? fmt(totals[i]/n,metric.dec):'–'}</td>`; }).join('') + '</tr>';
