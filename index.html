@@ -489,7 +489,7 @@ function commInit(){
     const act = activeReps(84);
     for(let i=11;i>=0;i--){
       const hi = 7*(i+1), lo = 7*i;   // offsets lo..hi-1 ; i=0 is most recent week
-      let s=0; for (const r of RAW[rep]) if (r[0]>=lo && r[0]<hi) s += metric.f(r);
+      let s=0; for (const r of (ALL[rep]||[])) if (r[0]>=lo && r[0]<hi) s += metric.f(r);
       mine.push(s);
       let t=0; for (const rp of act) for (const r of RAW[rp]) if (r[0]>=lo && r[0]<hi) t += metric.f(r);
       team.push(act.length? t/act.length : 0);
