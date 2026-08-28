@@ -414,6 +414,10 @@ function commInit(){
     {k:'ia',  label:'Inbound Answered',   f:r=>r[2], dec:0},
     {k:'im',  label:'Inbound Missed',     f:r=>r[3], dec:0},
     {k:'si',  label:'SMS Received',       f:r=>r[7], dec:0},
+    {k:'qn',  label:'Quotes Given',        f:r=>q(r,11), dec:0},
+    {k:'q$',  label:'Quote $',             f:r=>q(r,12), dec:0, cur:true},
+    {k:'bn',  label:'Bookings',            f:r=>q(r,13), dec:0},
+    {k:'b$',  label:'Booked $',            f:r=>q(r,14), dec:0, cur:true},
   ];
   const PERIODS = [
     {k:'y',  label:'Yesterday',    days:1},
@@ -423,6 +427,8 @@ function commInit(){
   ];
 
   const fmt = (v,dec) => Number(v.toFixed(dec)).toLocaleString('en-US',{maximumFractionDigits:dec});
+  // metric-aware: prefixes $ for currency metrics
+  const fmtM = (v,m) => (m.cur?'$':'') + fmt(v,m.dec);
 
   function sum(rep, metric, days){
     const rows = ALL[rep]; if (!rows) return 0;
@@ -474,12 +480,12 @@ function commInit(){
       }
       html += `<div class="tile">
         <div class="t-label">${p.label}</div>
-        <div class="t-value">${fmt(mine,metric.dec)}</div>
+        <div class="t-value">${fmtM(mine,metric)}</div>
         <div class="t-unit">${metric.label.replace(/ \(.*/,'')}</div>
         ${delta? `<div class="t-delta ${cls}">${delta}</div>`:''}
         <div class="t-rows">
           ${p.days>1? `<div class="t-row"><span>Your avg / day</span><b>${fmt(myAvg,1)}</b></div>`:''}
-          <div class="t-row"><span>Team avg / rep</span><b>${fmt(teamAvg,metric.dec)}</b></div>
+          <div class="t-row"><span>Team avg / rep</span><b>${fmtM(teamAvg,metric)}</b></div>
           ${isQueue(rep)? `<div class="t-row"><span>Shared line — excluded from team avg</span><b>&nbsp;</b></div>`:''}
           ${p.days>1? `<div class="t-row"><span>Team avg / rep / day</span><b>${fmt(tAvg,1)}</b></div>`:''}
         </div>
@@ -535,7 +541,7 @@ function commInit(){
     el += `<path d="${pts}" fill="none" stroke="#e86200" stroke-width="2.5" stroke-dasharray="6 5"/>`;
     // direct label on max bar
     const mi = mine.indexOf(Math.max(...mine));
-    if (mine[mi] > 0) el += `<text x="${padL+mi*bw+bw/2}" y="${y(mine[mi])-6}" fill="#ffffff" font-size="11" font-weight="600" text-anchor="middle" font-family="Poppins">${fmt(mine[mi],metric.dec)}</text>`;
+    if (mine[mi] > 0) el += `<text x="${padL+mi*bw+bw/2}" y="${y(mine[mi])-6}" fill="#ffffff" font-size="11" font-weight="600" text-anchor="middle" font-family="Poppins">${fmtM(mine[mi],metric)}</text>`;
     svg.innerHTML = el;
     svg.setAttribute('height', H);
     $('chartTitle').textContent = 'Weekly trend — ' + metric.label;
@@ -548,7 +554,7 @@ function commInit(){
       b.addEventListener('mousemove', e => {
         const i = +b.dataset.i;
         tip.style.display='block';
-        tip.innerHTML = `<b>Week of ${labels[i]}</b><br>${rep}: <b>${fmt(mine[i],metric.dec)}</b><br>Team avg/rep: <b>${fmt(team[i],metric.dec)}</b>`;
+        tip.innerHTML = `<b>Week of ${labels[i]}</b><br>${rep}: <b>${fmtM(mine[i],metric)}</b><br>Team avg/rep: <b>${fmtM(team[i],metric)}</b>`;
         const wr = $('chartwrap').getBoundingClientRect();
         let tx = e.clientX - wr.left + 14, ty = e.clientY - wr.top - 10;
         if (tx + tip.offsetWidth > wr.width) tx -= tip.offsetWidth + 28;
@@ -563,18 +569,18 @@ function commInit(){
                       .sort((a,b)=>b.v[3]-a.v[3]);
     let body='';
     for (const r of rows){
-      body += `<tr data-rep="${r.rp}" class="${r.rp===rep?'sel':''}"><td>${r.rp}</td>${r.v.map(v=>`<td>${fmt(v,metric.dec)}</td>`).join('')}</tr>`;
+      body += `<tr data-rep="${r.rp}" class="${r.rp===rep?'sel':''}"><td>${r.rp}</td>${r.v.map(v=>`<td>${fmtM(v,metric)}</td>`).join('')}</tr>`;
     }
     for (const q of queues){
       const v = PERIODS.map(p=>sum(q,metric,p.days));
-      body += `<tr data-rep="${q}" class="qrow ${q===rep?'sel':''}"><td>${q.replace(' (Queue)',' — Toll-Free Queue')}</td>${v.map(x=>`<td>${fmt(x,metric.dec)}</td>`).join('')}</tr>`;
+      body += `<tr data-rep="${q}" class="qrow ${q===rep?'sel':''}"><td>${q.replace(' (Queue)',' — Toll-Free Queue')}</td>${v.map(x=>`<td>${fmtM(x,metric)}</td>`).join('')}</tr>`;
     }
     $('tbl').tBodies[0].innerHTML = body;
     // footer: team total + avg per active rep
     let foot='<tr><td>Team total (reps only)</td>';
     const totals = PERIODS.map(p => order.reduce((s,rp)=>s+sum(rp,metric,p.days),0));
-    foot += totals.map(v=>`<td>${fmt(v,metric.dec)}</td>`).join('') + '</tr><tr><td>Team avg / rep</td>';
-    foot += PERIODS.map((p,i) => { const n = activeReps(p.days).length; return `<td>${n? fmt(totals[i]/n,metric.dec):'–'}</td>`; }).join('') + '</tr>';
+    foot += totals.map(v=>`<td>${fmtM(v,metric)}</td>`).join('') + '</tr><tr><td>Team avg / rep</td>';
+    foot += PERIODS.map((p,i) => { const n = activeReps(p.days).length; return `<td>${n? fmtM(totals[i]/n,metric):'–'}</td>`; }).join('') + '</tr>';
     $('tbl').tFoot.innerHTML = foot;
     $('tblSub').textContent = metric.label + ' — click a row to switch rep.';
     $('tbl').tBodies[0].querySelectorAll('tr').forEach(tr => tr.addEventListener('click', () => { repSel.value = tr.dataset.rep; render(); }));
