@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Ads Change Log · Sharks</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📝</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy-deep:#0a0f1e; --navy:#1e2a3a; --navy-card:#16202e; --teal:#00a19a; --teal-dark:#008a84;
+    --orange:#ff6b00; --white:#fff; --muted:#9aa7b8; --line:rgba(255,255,255,0.08);
+    --red:#ff4d4f; --red-bg:rgba(255,77,79,0.12); --amber:#ffb020; --amber-bg:rgba(255,176,32,0.12);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Poppins',sans-serif; background:var(--navy-deep); color:var(--white); min-height:100vh; }
+  header { background:var(--white); padding:14px 32px; display:flex; align-items:center; justify-content:space-between; gap:16px; }
+  header img { height:46px; width:auto; display:block; }
+  header .right { display:flex; gap:10px; align-items:center; }
+  .badge { background:var(--navy-deep); color:var(--white); font-size:12px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; padding:8px 18px; border-radius:50px; white-space:nowrap; }
+  .back { color:var(--navy-deep); font-weight:600; font-size:13px; text-decoration:none; }
+  main { max-width:1200px; margin:0 auto; padding:36px 20px 72px; }
+  .eyebrow { color:var(--orange); font-weight:600; font-size:13px; letter-spacing:.12em; text-transform:uppercase; }
+  h1 { font-weight:900; font-size:clamp(28px,4vw,42px); line-height:1.15; margin:6px 0 6px; }
+  .sub { color:var(--muted); font-size:14px; line-height:1.6; max-width:760px; }
+  .row { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:24px; }
+  @media (max-width:860px){ .row{ grid-template-columns:1fr; } header{ padding:12px 16px; } }
+  .panel { background:var(--navy); border:1px solid var(--line); border-radius:18px; padding:20px 22px; }
+  .panel h2 { font-size:16px; font-weight:700; display:flex; align-items:center; gap:8px; }
+  .panel .p-sub { font-size:12.5px; color:var(--muted); margin:2px 0 12px; }
+  .count { background:var(--orange); color:#fff; border-radius:50px; font-size:12px; padding:1px 10px; }
+  .count.zero { background:rgba(255,255,255,.12); }
+  .mini { list-style:none; display:grid; gap:8px; max-height:260px; overflow:auto; }
+  .mini li { background:var(--navy-card); border-radius:12px; padding:10px 12px; font-size:13px; display:flex; justify-content:space-between; gap:12px; align-items:center; }
+  .mini li .c { font-weight:600; }
+  .mini li .m { color:var(--muted); font-size:12px; }
+  .days { font-weight:900; font-size:20px; color:var(--orange); white-space:nowrap; text-align:right; line-height:1.1; }
+  .days small { display:block; font-size:10.5px; color:var(--muted); font-weight:600; }
+  .empty { color:var(--muted); font-size:13px; }
+  .btn { font-family:inherit; display:inline-flex; align-items:center; gap:8px; background:var(--orange); color:#fff; border:0; font-weight:600; font-size:14px; padding:11px 22px; border-radius:50px; cursor:pointer; }
+  .btn:hover { filter:brightness(1.08); }
+  .btn.ghost { background:transparent; border:1px solid rgba(255,255,255,.22); }
+  .btn.small { font-size:12px; padding:6px 14px; }
+  .btn:disabled { opacity:.5; cursor:not-allowed; }
+  .toolbar { display:flex; flex-wrap:wrap; gap:10px; align-items:flex-end; margin:28px 0 12px; }
+  .toolbar .grow { flex:1; }
+  .filters { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; background:var(--navy); border:1px solid var(--line); border-radius:18px; padding:14px 16px; }
+  label.f { display:flex; flex-direction:column; gap:4px; font-size:11px; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:.06em; }
+  input, select, textarea { font-family:inherit; font-size:14px; color:var(--white); background:var(--navy-card); border:1px solid rgba(255,255,255,.16); border-radius:10px; padding:9px 11px; width:100%; }
+  textarea { min-height:70px; resize:vertical; }
+  input:focus, select:focus, textarea:focus { outline:2px solid var(--orange); outline-offset:0; }
+  input[type=checkbox]{ width:auto; }
+  .meta { color:var(--muted); font-size:12.5px; margin:10px 2px; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  .tablewrap { background:var(--navy); border:1px solid var(--line); border-radius:18px; overflow:auto; }
+  th { text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); padding:12px 12px; border-bottom:1px solid var(--line); position:sticky; top:0; background:var(--navy); white-space:nowrap; }
+  td { padding:10px 12px; border-bottom:1px solid var(--line); vertical-align:top; }
+  tr:hover td { background:rgba(255,255,255,.025); }
+  td.when { white-space:nowrap; color:var(--muted); font-size:12px; }
+  td.chg { max-width:380px; white-space:pre-line; }
+  .clamp { display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+  .clamp.open { -webkit-line-clamp:unset; }
+  .more { color:var(--teal); font-size:12px; cursor:pointer; background:none; border:0; font-family:inherit; padding:0; }
+  .tag { display:inline-block; font-size:11px; font-weight:600; border-radius:50px; padding:2px 9px; background:rgba(255,255,255,.08); white-space:nowrap; margin:1px 0; }
+  .tag.imp { background:rgba(154,167,184,.16); color:var(--muted); }
+  .tag.ovr { background:var(--red-bg); color:var(--red); }
+  .tag.hold { background:rgba(255,107,0,.16); color:var(--orange); }
+  .tag.keep { background:rgba(0,161,154,.18); color:#35d0c8; }
+  .tag.revert { background:var(--red-bg); color:var(--red); }
+  .loadmore { display:flex; justify-content:center; margin-top:14px; }
+  /* modal */
+  dialog { margin:auto; border:0; border-radius:20px; background:var(--navy); color:var(--white); width:min(760px,96vw); padding:0; max-height:92vh; }
+  dialog::backdrop { background:rgba(4,8,18,.72); }
+  .m-head { display:flex; justify-content:space-between; align-items:center; padding:18px 22px; border-bottom:1px solid var(--line); position:sticky; top:0; background:var(--navy); z-index:1; }
+  .m-head h3 { font-size:18px; font-weight:700; }
+  .m-body { padding:18px 22px; display:grid; grid-template-columns:1fr 1fr; gap:12px 14px; }
+  .m-body .full { grid-column:1 / -1; }
+  @media (max-width:640px){ .m-body{ grid-template-columns:1fr; } }
+  .m-foot { padding:14px 22px 20px; display:flex; gap:10px; justify-content:flex-end; border-top:1px solid var(--line); }
+  .star { color:var(--orange); display:none; }
+  .req > .lt .star { display:inline; }
+  .banner { border-radius:12px; padding:10px 14px; font-size:13px; line-height:1.5; }
+  .banner.red { background:var(--red-bg); border:1px solid var(--red); color:#ffd6d6; }
+  .banner.amber { background:var(--amber-bg); border:1px solid var(--amber); color:#ffe7b8; }
+  .banner.info { background:rgba(0,161,154,.12); border:1px solid var(--teal); color:#c9f3f1; }
+  .banner b { color:#fff; }
+  .hidden { display:none !important; }
+  .x { background:none; border:0; color:var(--muted); font-size:24px; cursor:pointer; line-height:1; }
+  .err { color:var(--red); font-size:13px; margin-right:auto; align-self:center; }
+  .api { margin-top:28px; font-size:12.5px; color:var(--muted); }
+  .api code { color:var(--white); background:var(--navy-card); padding:2px 7px; border-radius:6px; }
+  footer { border-top:1px solid var(--line); padding:20px; text-align:center; color:var(--muted); font-size:13px; }
+</style>
+</head>
+<body>
+<header>
+  <a href="/"><img src="https://emergencycleanings.com/wp-content/uploads/2026/07/Final-logo-for-buyer-png.png" alt="Emergency Cleanings"></a>
+  <div class="right"><a class="back" href="/">← All tools</a><span class="badge">Internal · Team Only</span></div>
+</header>
+
+<main>
+  <div class="eyebrow">Ads control point</div>
+  <h1>Ads Change Log</h1>
+  <p class="sub">Log every change to bidding, targets, conversions, budgets or campaign status <b>before</b> you make it. Bid strategy, conversion and automation changes start a 21-day hold so smart bidding can finish learning.</p>
+
+  <div class="row">
+    <section class="panel">
+      <h2>Reviews due <span class="count zero" id="dueCount">0</span></h2>
+      <p class="p-sub">Past hold-until with no result recorded. Open one and fill in “Result at review.”</p>
+      <ul class="mini" id="dueList"></ul>
+    </section>
+    <section class="panel">
+      <h2>Active holds <span class="count zero" id="holdCount">0</span></h2>
+      <p class="p-sub">Don't touch bidding on these campaigns until the hold ends <b>and</b> 100 conversions, whichever is later.</p>
+      <ul class="mini" id="holdList"></ul>
+    </section>
+  </div>
+
+  <div class="toolbar">
+    <button class="btn" id="newBtn">+ Log a change</button>
+    <div class="grow"></div>
+    <button class="btn ghost" id="csvBtn">Export CSV</button>
+  </div>
+
+  <div class="filters">
+    <label class="f"><span class="lt">Campaign<span class="star"> *</span></span><input id="fCampaign" list="campaignList" placeholder="Any"></label>
+    <label class="f"><span class="lt">Category<span class="star"> *</span></span><select id="fCategory"><option value="">Any</option></select></label>
+    <label class="f"><span class="lt">Person<span class="star"> *</span></span><select id="fPerson"><option value="">Anyone</option></select></label>
+    <label class="f"><span class="lt">Status<span class="star"> *</span></span><select id="fStatus"><option value="">Any</option></select></label>
+    <label class="f"><span class="lt">From<span class="star"> *</span></span><input type="date" id="fFrom"></label>
+    <label class="f"><span class="lt">To<span class="star"> *</span></span><input type="date" id="fTo"></label>
+    <label class="f"><span class="lt">Source<span class="star"> *</span></span><select id="fSource"><option value="">All</option><option value="team">Team entries</option><option value="imported">Imported</option></select></label>
+    <label class="f"><span class="lt">Search<span class="star"> *</span></span><input id="fText" placeholder="Text in change / why"></label>
+  </div>
+  <div class="meta" id="meta">Loading…</div>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>When (MT)</th><th>By</th><th>Campaign</th><th>Category</th><th>What changed</th><th>Why</th><th>Hold until</th><th>Status</th><th></th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+  <div class="loadmore"><button class="btn ghost small hidden" id="moreBtn">Show more</button></div>
+
+  <p class="api">Read-only JSON for the Weekly Ads Scorecard: <code>/api/changelog?view=holds</code> (add <code>&amp;campaign=…</code> for one campaign).</p>
+</main>
+
+<datalist id="campaignList"></datalist>
+
+<dialog id="dlg">
+  <form id="form" method="dialog" novalidate>
+    <div class="m-head"><h3 id="dlgTitle">Log a change</h3><button type="button" class="x" id="closeX" aria-label="Close">×</button></div>
+    <div class="m-body">
+      <div class="full banner red hidden" id="conflictBanner"></div>
+      <div class="full banner amber hidden" id="budgetBanner"></div>
+      <div class="full banner info hidden" id="readonlyBanner">Imported from Google Ads change history. Read-only.</div>
+      <label class="f"><span class="lt">Date/time (MT)<span class="star"> *</span></span><input id="iTs" disabled></label>
+      <label class="f req"><span class="lt">Changed by
+        <span class="star"> *</span></span><select id="iBy"></select>
+        <input id="iByOther" class="hidden" placeholder="Name">
+      </label>
+      <label class="f req"><span class="lt">Platform<span class="star"> *</span></span><select id="iPlatform"></select></label>
+      <label class="f req"><span class="lt">Campaign<span class="star"> *</span></span><input id="iCampaign" list="campaignList" autocomplete="off"></label>
+      <label class="f req"><span class="lt">Category<span class="star"> *</span></span><select id="iCategory"></select></label>
+      <label class="f req"><span class="lt">Status<span class="star"> *</span></span><select id="iStatus"></select></label>
+      <label class="f budget hidden req"><span class="lt">Old daily budget ($)<span class="star"> *</span></span><input id="iOld" inputmode="decimal"></label>
+      <label class="f budget hidden req"><span class="lt">New daily budget ($)<span class="star"> *</span></span><input id="iNew" inputmode="decimal"></label>
+      <label class="f full req"><span class="lt">What changed (from → to)<span class="star"> *</span></span><textarea id="iChange" placeholder="tCPA $150 → tROAS 18x"></textarea></label>
+      <label class="f full req"><span class="lt">Why<span class="star"> *</span></span><textarea id="iWhy"></textarea></label>
+      <label class="f full" id="metricLabel"><span class="lt">Success metric + target<span class="star"> *</span></span><input id="iMetric" placeholder="e.g. CPA under $160 on 30+ conversions"></label>
+      <label class="f"><span class="lt">Hold until<span class="star"> *</span></span><input id="iHold" disabled></label>
+      <div class="f" id="holdNote" style="font-size:12px;color:var(--muted);align-self:end;padding-bottom:10px"></div>
+      <label class="f full" id="resultLabel"><span class="lt">Result at review<span class="star"> *</span></span><textarea id="iResult" placeholder="Fill in on or after the hold-until date"></textarea></label>
+    </div>
+    <div class="m-foot">
+      <span class="err" id="formErr"></span>
+      <button type="button" class="btn ghost" id="cancelBtn">Cancel</button>
+      <button type="submit" class="btn" id="saveBtn">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<footer><strong>Sharks</strong> · Emergency Cleanings internal tools</footer>
+
+<script>
+(() => {
+  const API = '/api/changelog';
+  const SEED = '/api/changelog?view=history';
+  const TZ = 'America/Denver';
+  const PEOPLE = ['Dustin', 'geckoss217', 'romeroruiztyrone', 'Liquet Creative', 'gerardo'];
+  const PLATFORMS = ['Google Ads', 'Microsoft Ads', 'Meta', 'Reddit', 'ChatGPT Ads'];
+  const CATEGORIES = ['Bid strategy/targets', 'Conversion tracking', 'Budget', 'Pause/enable', 'Keywords', 'Negative keywords', 'Ads/assets', 'Location', 'Audience', 'AI Max/automation', 'Rules', 'Other'];
+  const STATUSES = ['Planned', 'Live', 'In hold', 'Reviewed – keep', 'Reviewed – revert'];
+  const HOLD_CATS = ['Bid strategy/targets', 'Conversion tracking', 'AI Max/automation'];
+  const METRIC_CATS = ['Bid strategy/targets', 'Conversion tracking', 'Budget'];
+  const PAGE = 100;
+
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const norm = s => String(s || '').trim().toLowerCase();
+  const mtDate = d => new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
+  const fmtWhen = iso => new Date(iso).toLocaleString('en-US', { timeZone: TZ, month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+  const fmtDay = ymd => ymd ? new Date(ymd + 'T12:00:00Z').toLocaleDateString('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric', year: 'numeric' }) : '';
+  const addDays = (ymd, n) => { const d = new Date(ymd + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+  const holdFor = (cat, iso) => HOLD_CATS.includes(cat) ? addDays(mtDate(new Date(iso)), 21) : '';
+  const daysBetween = (a, b) => Math.round((new Date(b + 'T12:00:00Z') - new Date(a + 'T12:00:00Z')) / 864e5);
+  const today = () => mtDate(new Date());
+  const isActiveHold = e => e.holdUntil && e.holdUntil >= today() && !String(e.status || '').startsWith('Reviewed');
+  const opts = (sel, list, first) => { sel.innerHTML = (first ?? '') + list.map(v => `<option>${esc(v)}</option>`).join(''); };
+  const money = v => parseFloat(String(v).replace(/[^0-9.\-]/g, ''));
+
+  let team = [], seed = [], all = [], shown = PAGE, editing = null, apiOk = true;
+  const teamKey = () => { try { return localStorage.getItem('ecChangelogKey') || ''; } catch { return ''; } };
+
+  async function load() {
+    const [t, s] = await Promise.all([
+      fetch(API, { cache: 'no-store' }).then(r => r.ok ? r.json() : Promise.reject(r.status)).catch(e => { apiOk = false; console.error('API', e); return { entries: [] }; }),
+      fetch(SEED).then(r => r.ok ? r.json() : { entries: [] }).catch(() => ({ entries: [] })),
+    ]);
+    team = t.entries || [];
+    seed = (s.entries || []).map(e => ({ ...e, holdUntil: holdFor(e.category, e.ts) }));
+    all = team.concat(seed).sort((a, b) => b.ts.localeCompare(a.ts));
+    buildLists(); render();
+  }
+
+  function buildLists() {
+    const camps = [...new Set(all.map(e => e.campaign).filter(Boolean))];
+    $('campaignList').innerHTML = camps.slice(0, 400).map(c => `<option value="${esc(c)}">`).join('');
+    const people = [...new Set(PEOPLE.concat(all.map(e => e.by).filter(Boolean)))];
+    const cur = $('fPerson').value; opts($('fPerson'), people, '<option value="">Anyone</option>'); $('fPerson').value = cur;
+  }
+
+  function filtered() {
+    const c = norm($('fCampaign').value), cat = $('fCategory').value, p = $('fPerson').value, st = $('fStatus').value;
+    const from = $('fFrom').value, to = $('fTo').value, src = $('fSource').value, q = norm($('fText').value);
+    return all.filter(e => {
+      if (c && !norm(e.campaign).includes(c)) return false;
+      if (cat && e.category !== cat) return false;
+      if (p && e.by !== p) return false;
+      if (st && e.status !== st) return false;
+      const d = mtDate(new Date(e.ts));
+      if (from && d < from) return false;
+      if (to && d > to) return false;
+      if (src === 'team' && e.imported) return false;
+      if (src === 'imported' && !e.imported) return false;
+      if (q && !norm(e.change + ' ' + e.why + ' ' + e.result).includes(q)) return false;
+      return true;
+    });
+  }
+
+  function statusTag(e) {
+    const s = e.status || '';
+    const cls = s === 'In hold' ? 'hold' : s === 'Reviewed – keep' ? 'keep' : s === 'Reviewed – revert' ? 'revert' : '';
+    return `<span class="tag ${cls}">${esc(s)}</span>` + (e.imported ? ' <span class="tag imp">Imported</span>' : '') + (e.override ? ' <span class="tag ovr">Override</span>' : '');
+  }
+
+  function render() {
+    const rows = filtered();
+    $('meta').textContent = `${rows.length.toLocaleString()} entries · ${team.length} team · ${seed.length.toLocaleString()} imported` + (apiOk ? '' : ' · ⚠ Shared storage not reachable. Team entries can’t load or save right now.');
+    $('rows').innerHTML = rows.slice(0, shown).map(e => `
+      <tr>
+        <td class="when">${esc(fmtWhen(e.ts))}</td>
+        <td>${esc(e.by)}</td>
+        <td>${esc(e.campaign)}${e.adGroup ? `<div class="meta" style="margin:2px 0 0">${esc(e.adGroup)}</div>` : ''}</td>
+        <td><span class="tag">${esc(e.category)}</span></td>
+        <td class="chg"><div class="clamp">${esc(e.change)}</div>${e.change && e.change.length > 160 ? '<button class="more">more</button>' : ''}</td>
+        <td class="chg"><div class="clamp">${esc(e.why)}</div>${e.result ? `<div class="meta" style="margin:4px 0 0"><b>Result:</b> ${esc(e.result)}</div>` : ''}</td>
+        <td class="when">${esc(fmtDay(e.holdUntil))}</td>
+        <td>${statusTag(e)}</td>
+        <td><button class="btn ghost small" data-id="${esc(e.id)}">${e.imported ? 'View' : 'Edit'}</button></td>
+      </tr>`).join('') || '<tr><td colspan="9" class="empty">No entries match these filters.</td></tr>';
+    $('moreBtn').classList.toggle('hidden', rows.length <= shown);
+    renderPanels();
+  }
+
+  function renderPanels() {
+    const t = today();
+    const due = team.filter(e => e.holdUntil && e.holdUntil < t && !String(e.result || '').trim())
+      .sort((a, b) => a.holdUntil.localeCompare(b.holdUntil));
+    $('dueCount').textContent = due.length; $('dueCount').classList.toggle('zero', !due.length);
+    $('dueList').innerHTML = due.map(e => `<li><div><div class="c">${esc(e.campaign)}</div><div class="m">${esc(e.category)} · ${esc(e.by)} · hold ended ${esc(fmtDay(e.holdUntil))}</div></div><button class="btn small" data-id="${esc(e.id)}">Review</button></li>`).join('') || '<li class="empty">Nothing due.</li>';
+
+    const byCamp = new Map();
+    all.filter(isActiveHold).forEach(e => {
+      const k = norm(e.campaign), cur = byCamp.get(k);
+      if (!cur || e.holdUntil > cur.holdUntil) byCamp.set(k, e);
+    });
+    const holds = [...byCamp.values()].sort((a, b) => a.holdUntil.localeCompare(b.holdUntil));
+    $('holdCount').textContent = holds.length; $('holdCount').classList.toggle('zero', !holds.length);
+    $('holdList').innerHTML = holds.map(e => {
+      const d = daysBetween(t, e.holdUntil);
+      return `<li><div><div class="c">${esc(e.campaign || '(account level)')}</div><div class="m">${esc(e.category)} · until ${esc(fmtDay(e.holdUntil))}${e.imported ? ' · imported' : ''}</div></div><div class="days">${d}<small>${d === 1 ? 'day left' : 'days left'}</small></div></li>`;
+    }).join('') || '<li class="empty">No campaigns are in a hold.</li>';
+  }
+
+  // ── form ──
+  function activeHoldsFor(campaign, exceptId) {
+    const c = norm(campaign); if (!c) return [];
+    return all.filter(e => e.id !== exceptId && norm(e.campaign) === c && isActiveHold(e));
+  }
+  function updateForm() {
+    const cat = $('iCategory').value, camp = $('iCampaign').value, ro = editing && editing.imported;
+    const ts = editing ? editing.ts : new Date().toISOString();
+    const hold = editing && editing.category === cat && editing.holdUntil ? editing.holdUntil : holdFor(cat, ts);
+    $('iHold').value = hold ? fmtDay(hold) : '—';
+    $('holdNote').textContent = HOLD_CATS.includes(cat) ? 'and 100 conversions, whichever is later.' : '';
+    $('iByOther').classList.toggle('hidden', $('iBy').value !== '__other');
+    document.querySelectorAll('.budget').forEach(el => el.classList.toggle('hidden', cat !== 'Budget'));
+    $('metricLabel').classList.toggle('req', METRIC_CATS.includes(cat));
+
+    // conflict (new entries only; edits keep their original flag)
+    const conflicts = (!editing && !ro) ? activeHoldsFor(camp) : [];
+    const cb = $('conflictBanner');
+    if (conflicts.length) {
+      const h = conflicts.sort((a, b) => b.holdUntil.localeCompare(a.holdUntil))[0];
+      cb.innerHTML = `<b>Active hold on this campaign until ${esc(fmtDay(h.holdUntil))}</b> (${esc(h.category)}, logged by ${esc(h.by)} on ${esc(fmtWhen(h.ts))}). Changing it now resets learning. You can still save, but this entry will be flagged <b>Override</b>.`;
+    }
+    cb.classList.toggle('hidden', !conflicts.length);
+
+    // budget warnings
+    const bb = $('budgetBanner'), warn = [];
+    if (cat === 'Budget' && !ro) {
+      const last = all.filter(e => e.category === 'Budget' && e.id !== (editing && editing.id) && norm(e.campaign) === norm(camp) && norm(camp))
+        .sort((a, b) => b.ts.localeCompare(a.ts))[0];
+      if (last) {
+        const age = (new Date(ts) - new Date(last.ts)) / 864e5;
+        if (age >= 0 && age < 7) warn.push(`Last budget change on this campaign was <b>${age < 1 ? 'less than a day' : Math.floor(age) + ' day' + (Math.floor(age) === 1 ? '' : 's')} ago</b> (${esc(fmtWhen(last.ts))}). Wait 7 days between budget changes.`);
+      }
+      const o = money($('iOld').value), n = money($('iNew').value);
+      if (o > 0 && !isNaN(n)) {
+        const pct = (n - o) / o * 100;
+        if (Math.abs(pct) > 20) warn.push(`This is a <b>${pct > 0 ? '+' : ''}${pct.toFixed(0)}%</b> change. Keep budget moves within 20%.`);
+      }
+    }
+    bb.innerHTML = warn.join('<br>'); bb.classList.toggle('hidden', !warn.length);
+  }
+
+  function openForm(e) {
+    editing = e || null;
+    const ro = !!(e && e.imported);
+    $('dlgTitle').textContent = !e ? 'Log a change' : ro ? 'Imported change' : 'Edit change';
+    $('readonlyBanner').classList.toggle('hidden', !ro);
+    $('formErr').textContent = '';
+    const people = [...new Set(PEOPLE.concat(team.map(x => x.by).filter(Boolean)))];
+    const by = e ? e.by : '';
+    if (by && !people.includes(by)) people.push(by);
+    $('iBy').innerHTML = '<option value="">Select…</option>' + people.map(p => `<option>${esc(p)}</option>`).join('') + '<option value="__other">Other…</option>';
+    $('iBy').value = by; $('iByOther').value = '';
+    $('iTs').value = e ? fmtWhen(e.ts) + ' MT' : 'Set when saved';
+    $('iPlatform').value = e ? e.platform : 'Google Ads';
+    $('iCampaign').value = e ? e.campaign : '';
+    $('iCategory').value = e ? e.category : '';
+    $('iStatus').value = e ? e.status : 'Planned';
+    $('iOld').value = e ? e.oldAmount || '' : ''; $('iNew').value = e ? e.newAmount || '' : '';
+    $('iChange').value = e ? e.change : ''; $('iWhy').value = e ? e.why : '';
+    $('iMetric').value = e ? e.metric : ''; $('iResult').value = e ? e.result : '';
+    $('form').querySelectorAll('input:not(#iTs):not(#iHold),select,textarea').forEach(el => el.disabled = ro);
+    $('saveBtn').classList.toggle('hidden', ro);
+    $('resultLabel').classList.toggle('hidden', !e);
+    updateForm();
+    $('dlg').showModal();
+  }
+
+  async function submit(ev) {
+    ev.preventDefault();
+    if (editing && editing.imported) return $('dlg').close();
+    const cat = $('iCategory').value;
+    const by = $('iBy').value === '__other' ? $('iByOther').value.trim() : $('iBy').value;
+    const body = {
+      by, platform: $('iPlatform').value, campaign: $('iCampaign').value.trim(), category: cat,
+      status: $('iStatus').value, change: $('iChange').value.trim(), why: $('iWhy').value.trim(),
+      metric: $('iMetric').value.trim(), result: $('iResult').value.trim(),
+      oldAmount: $('iOld').value.trim(), newAmount: $('iNew').value.trim(),
+    };
+    const miss = [];
+    if (!body.by) miss.push('Changed by'); if (!body.campaign) miss.push('Campaign'); if (!cat) miss.push('Category');
+    if (!body.change) miss.push('What changed'); if (!body.why) miss.push('Why');
+    if (METRIC_CATS.includes(cat) && !body.metric) miss.push('Success metric + target');
+    if (cat === 'Budget' && (!body.oldAmount || !body.newAmount)) miss.push('Old and new budget');
+    if (miss.length) { $('formErr').textContent = 'Required: ' + miss.join(', '); return; }
+    if (body.change && cat === 'Budget' && !/\$|→|->|to/i.test(body.change)) body.change = `$${body.oldAmount} → $${body.newAmount}. ${body.change}`;
+
+    $('saveBtn').disabled = true; $('formErr').textContent = '';
+    try {
+      let r = await send(body);
+      if (r.status === 401) {
+        const k = prompt('Enter the team key to save changes:');
+        if (k) { try { localStorage.setItem('ecChangelogKey', k); } catch {} r = await send(body); }
+      }
+      const out = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(out.error || `Save failed (${r.status})`);
+      const i = team.findIndex(x => x.id === out.entry.id);
+      if (i >= 0) team[i] = out.entry; else team.push(out.entry);
+      all = team.concat(seed).sort((a, b) => b.ts.localeCompare(a.ts));
+      buildLists(); render(); $('dlg').close();
+    } catch (err) {
+      $('formErr').textContent = err.message;
+    } finally { $('saveBtn').disabled = false; }
+  }
+  function send(body) {
+    const url = editing ? `${API}?id=${encodeURIComponent(editing.id)}` : API;
+    return fetch(url, { method: editing ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json', 'X-Team-Key': teamKey() }, body: JSON.stringify(body) });
+  }
+
+  function exportCsv() {
+    const cols = [['Date/time (MT)', e => fmtWhen(e.ts)], ['Changed by', e => e.by], ['Platform', e => e.platform], ['Campaign', e => e.campaign], ['Ad group', e => e.adGroup || ''],
+      ['Category', e => e.category], ['What changed', e => e.change], ['Why', e => e.why], ['Old budget', e => e.oldAmount || ''], ['New budget', e => e.newAmount || ''],
+      ['Hold until', e => e.holdUntil || ''], ['Success metric + target', e => e.metric], ['Result at review', e => e.result], ['Status', e => e.status],
+      ['Override', e => e.override ? 'Yes' : ''], ['Source', e => e.imported ? 'Imported' : 'Team']];
+    const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const csv = [cols.map(c => q(c[0])).join(',')].concat(filtered().map(e => cols.map(c => q(c[1](e))).join(','))).join('\r\n');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv' }));
+    a.download = `ads-change-log-${today()}.csv`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  }
+
+  // ── wire up ──
+  opts($('fCategory'), CATEGORIES, '<option value="">Any</option>');
+  opts($('fStatus'), STATUSES, '<option value="">Any</option>');
+  opts($('iPlatform'), PLATFORMS);
+  opts($('iCategory'), CATEGORIES, '<option value="">Select…</option>');
+  opts($('iStatus'), STATUSES);
+  ['fCampaign', 'fCategory', 'fPerson', 'fStatus', 'fFrom', 'fTo', 'fSource', 'fText'].forEach(id => $(id).addEventListener('input', () => { shown = PAGE; render(); }));
+  ['iCategory', 'iCampaign', 'iBy', 'iOld', 'iNew'].forEach(id => $(id).addEventListener('input', updateForm));
+  $('iCategory').addEventListener('change', () => { if (!editing && HOLD_CATS.includes($('iCategory').value) && $('iStatus').value === 'Live') $('iStatus').value = 'In hold'; });
+  $('newBtn').onclick = () => openForm(null);
+  $('csvBtn').onclick = exportCsv;
+  $('moreBtn').onclick = () => { shown += PAGE; render(); };
+  $('closeX').onclick = $('cancelBtn').onclick = () => $('dlg').close();
+  $('form').addEventListener('submit', submit);
+  document.addEventListener('click', ev => {
+    const b = ev.target.closest('button[data-id]');
+    if (b) return openForm(all.find(e => e.id === b.dataset.id));
+    if (ev.target.classList.contains('more')) { const c = ev.target.previousElementSibling; c.classList.toggle('open'); ev.target.textContent = c.classList.contains('open') ? 'less' : 'more'; }
+  });
+  load();
+})();
+</script>
+</body>
+</html>
