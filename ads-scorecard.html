@@ -134,15 +134,15 @@
   </section>
 
   <section class="sect">
-    <h2>Last 26 weeks</h2>
-    <p class="p-sub">Newest first.</p>
+    <h2>All weeks since Jan 2025</h2>
+    <p class="p-sub">Newest first, through the selected week. Greyed cells: no data for that source yet.</p>
     <div class="panel tblwrap"><table id="tbl"></table></div>
   </section>
 
   <ul class="notes">
     <li>Spend = Google Ads cost (account 299-875-2313) + Microsoft Ads cost from the Tracker_2025 “Microsoft Ads Data” tab. Microsoft data starts Aug 20, 2025 and has gaps before late Sept 2025.</li>
     <li>Quotable leads = WhatConverts leads with Quotable = Yes (all sources). Jobs and revenue = WhatConverts Transactions, cancellations excluded.</li>
-    <li>WhatConverts has no leads before Apr 1, 2025 and no transactions before Sept 25, 2025, so year-over-year jobs and revenue are blank until late Sept 2026.</li>
+    <li>Google Ads spend runs from the week of Dec 30, 2024. WhatConverts has no leads before Apr 1, 2025 and no transactions before Sept 25, 2025, so year-over-year jobs and revenue are blank until late Sept 2026.</li>
     <li>Most Apr–Aug 2025 leads have no sales stage (“TBD”), so 2025 wrong-number % and low-budget % aren't comparable. Those weeks are shown greyed and aren't used for year-over-year.</li>
     <li>The WhatConverts API sometimes returns a transient 503. The refresh retries up to 3 times and never writes a week that returned an error.</li>
     <li>The budget is saved in this browser only.</li>
@@ -161,8 +161,8 @@ const $ = id => document.getElementById(id);
 // dir: +1 up is good, -1 down is good, 0 = budget rule
 const METRICS = [
   { key:'spend',  label:'Ad spend',               fmt:'$',  dir:0,  get:r=>r.g_spend+r.ms_spend },
-  { key:'quot',   label:'Quotable leads',         fmt:'n',  dir:1,  get:r=>r.quotable },
-  { key:'cpql',   label:'Cost per quotable lead', fmt:'$',  dir:-1, get:r=>r.quotable? (r.g_spend+r.ms_spend)/r.quotable : null },
+  { key:'quot',   label:'Quotable leads',         fmt:'n',  dir:1,  get:r=>r.wcOk? r.quotable : null },
+  { key:'cpql',   label:'Cost per quotable lead', fmt:'$',  dir:-1, get:r=>r.wcOk && r.quotable? (r.g_spend+r.ms_spend)/r.quotable : null },
   { key:'jobs',   label:'Jobs',                   fmt:'n',  dir:1,  get:r=>r.txOk? r.jobs : null },
   { key:'rev',    label:'Revenue',                fmt:'$',  dir:1,  get:r=>r.txOk? r.revenue : null },
   { key:'wrong',  label:'Wrong-number %',         fmt:'%',  dir:-1, get:r=>r.stageOk && r.leads? r.wrong_number/r.leads : null },
@@ -197,6 +197,7 @@ function prep() {
   const A = window.ADS; if (!A || !A.WEEKS || !A.WEEKS.length) return false;
   ROWS = A.WEEKS.map(w => {
     const r = {}; A.COLS.forEach((c,i) => r[c] = w[i]);
+    r.wcOk = r.week >= '2025-03-31';                        // WhatConverts leads start 2025-04-01
     r.txOk = r.week >= '2025-09-22';                         // transactions start 2025-09-25
     r.stageOk = r.leads ? (r.tbd_stage / r.leads) < 0.2 : false;  // most 2025 leads have no stage
     return r;
@@ -265,13 +266,13 @@ function render() {
   stackChart($('p-spend'), win, r => r.g_spend, r => r.ms_spend, '$');
   stackChart($('p-quot'), win, r => r.q_google, r => r.q_bing, 'n');
 
-  const last = ROWS.slice(Math.max(0, idx-25), idx+1).reverse();
+  const last = ROWS.slice(0, idx+1).reverse();
   $('tbl').innerHTML = `<thead><tr><th>Week of</th><th>Spend</th><th>Google</th><th>Microsoft</th><th>Quotable</th><th>G quot.</th><th>MS quot.</th><th>Cost / quot.</th><th>Jobs</th><th>Revenue</th><th>Wrong #</th><th>Low budget</th><th>Leads</th></tr></thead><tbody>` +
     last.map(r => { const v = k => METRICS.find(m=>m.key===k).get(r);
       return `<tr><td>${wkLabel(r.week)}</td><td>${fmt(v('spend'),'$')}</td><td>${fmt(r.g_spend,'$')}</td><td>${fmt(r.ms_spend,'$')}</td>
-      <td>${r.quotable}</td><td>${r.q_google}</td><td>${r.q_bing}</td><td>${fmt(v('cpql'),'$')}</td>
+      <td class="${r.wcOk?'':'na'}">${r.wcOk?r.quotable:'—'}</td><td class="${r.wcOk?'':'na'}">${r.wcOk?r.q_google:'—'}</td><td class="${r.wcOk?'':'na'}">${r.wcOk?r.q_bing:'—'}</td><td>${fmt(v('cpql'),'$')}</td>
       <td class="${r.txOk?'':'na'}">${fmt(v('jobs'),'n')}</td><td class="${r.txOk?'':'na'}">${fmt(v('rev'),'$')}</td>
-      <td class="${r.stageOk?'':'na'}">${fmt(v('wrong'),'%')}</td><td class="${r.stageOk?'':'na'}">${fmt(v('lowb'),'%')}</td><td>${r.leads}</td></tr>`; }).join('') + '</tbody>';
+      <td class="${r.stageOk?'':'na'}">${fmt(v('wrong'),'%')}</td><td class="${r.stageOk?'':'na'}">${fmt(v('lowb'),'%')}</td><td class="${r.wcOk?'':'na'}">${r.wcOk?r.leads:'—'}</td></tr>`; }).join('') + '</tbody>';
 }
 
 /* ── Charts (inline SVG, single axis) ───────────────────── */
