@@ -59,6 +59,8 @@
   th { text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); padding:12px 12px; border-bottom:1px solid var(--line); position:sticky; top:0; background:var(--navy); white-space:nowrap; }
   td { padding:10px 12px; border-bottom:1px solid var(--line); vertical-align:top; }
   tr:hover td { background:rgba(255,255,255,.025); }
+  .rowlink { cursor:pointer; }
+  .mini li.rowlink:hover { outline:1px solid var(--orange); }
   td.when { white-space:nowrap; color:var(--muted); font-size:12px; }
   td.chg { max-width:380px; white-space:pre-line; }
   .clamp { display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
@@ -169,7 +171,7 @@
     <div class="meta" id="meta">Loading…</div>
     <div class="tablewrap">
       <table>
-        <thead><tr><th>Log ID</th><th>Logged (MT)</th><th>Owner</th><th>Campaigns</th><th>Category</th><th>Previous → New</th><th>Justification · Metric</th><th>Evaluation</th><th>Status</th><th></th></tr></thead>
+        <thead><tr><th>Log ID</th><th>Logged (MT)</th><th>Owner</th><th>Campaigns</th><th>Category</th><th>Previous → New</th><th>Justification · Metric</th><th>Evaluation</th><th>Status</th></tr></thead>
         <tbody id="rows"></tbody>
       </table>
     </div>
@@ -333,8 +335,8 @@
     $('rows').innerHTML = rows.slice(0, shown).map(e => {
       const change = e.imported ? e.change : `${e.prev} → ${e.next}`;
       const camps = (e.campaigns || []).join('\n') + (e.adGroup ? `\n${e.adGroup}` : '');
-      return `<tr>
-        <td class="when"><b style="color:#fff">${esc(e.logId || '')}</b></td>
+      return `<tr class="rowlink" data-row="${esc(e.id)}" title="Click to ${e.imported ? 'view' : 'edit'}">
+        <td class="when"><b style="color:#fff">${esc(e.logId || '')}</b><div style="margin-top:6px"><button class="btn ghost small" data-id="${esc(e.id)}">${e.imported ? 'View' : 'Edit'}</button></div></td>
         <td class="when">${esc(fmtWhen(e.ts))}</td>
         <td>${esc(e.by)}</td>
         <td class="chg"><div class="clamp">${esc(camps)}</div></td>
@@ -343,9 +345,8 @@
         <td class="chg"><div class="clamp">${esc(e.why || '')}</div>${e.metric ? `<div class="meta" style="margin:4px 0 0"><b>Metric:</b> ${esc(e.metric)}</div>` : ''}${e.result ? `<div class="meta" style="margin:4px 0 0"><b>Result:</b> ${esc(e.result)}</div>` : ''}</td>
         <td class="when">${evalCell(e)}</td>
         <td>${statusTag(e)}</td>
-        <td><button class="btn ghost small" data-id="${esc(e.id)}">${e.imported ? 'View' : 'Edit'}</button></td>
       </tr>`;
-    }).join('') || '<tr><td colspan="10" class="empty">No entries match these filters.</td></tr>';
+    }).join('') || '<tr><td colspan="9" class="empty">No entries match these filters.</td></tr>';
     $('moreBtn').classList.toggle('hidden', rows.length <= shown);
     renderPanels();
   }
@@ -358,7 +359,7 @@
     $('holdCount').textContent = holds.length; $('holdCount').classList.toggle('zero', !holds.length);
     $('holdList').innerHTML = holds.map(e => {
       const c = e.conv || { google: 0 };
-      return `<li><div><div class="c">${esc(e.logId)} · ${esc(e.campaigns.join(', '))}</div><div class="m">${esc(e.category)} · ${c.google}/100 conv · until ${esc(fmtDay(e.deadline))}</div><div class="prog"><i style="width:${Math.min(100, c.google)}%"></i></div></div><div class="days">${e.daysLeft}<small>${e.daysLeft === 1 ? 'day left' : 'days left'}</small>${e.convLeft ? `<small>${e.convLeft} conv to go</small>` : ''}</div></li>`;
+      return `<li class="rowlink" data-row="${esc(e.id)}" title="Click to edit"><div><div class="c">${esc(e.logId)} · ${esc(e.campaigns.join(', '))}</div><div class="m">${esc(e.category)} · ${c.google}/100 conv · until ${esc(fmtDay(e.deadline))}</div><div class="prog"><i style="width:${Math.min(100, c.google)}%"></i></div></div><div class="days">${e.daysLeft}<small>${e.daysLeft === 1 ? 'day left' : 'days left'}</small>${e.convLeft ? `<small>${e.convLeft} conv to go</small>` : ''}</div></li>`;
     }).join('') || '<li class="empty">No campaigns are in a hold.</li>';
   }
 
@@ -547,6 +548,8 @@
   document.addEventListener('click', ev => {
     const b = ev.target.closest('button[data-id]');
     if (b) return openForm(all.find(e => e.id === b.dataset.id));
+    const row = ev.target.closest('[data-row]');
+    if (row && !ev.target.closest('.more')) return openForm(all.find(e => e.id === row.dataset.row));
     if (ev.target.classList.contains('more')) { const c = ev.target.previousElementSibling; c.classList.toggle('open'); ev.target.textContent = c.classList.contains('open') ? 'less' : 'more'; }
   });
   load();
