@@ -93,6 +93,24 @@
   .api { margin-top:28px; font-size:12.5px; color:var(--muted); }
   .api code { color:var(--white); background:var(--navy-card); padding:2px 7px; border-radius:6px; }
   footer { border-top:1px solid var(--line); padding:20px; text-align:center; color:var(--muted); font-size:13px; }
+  .camps { max-height:190px; overflow:auto; background:var(--navy-card); border:1px solid rgba(255,255,255,.16); border-radius:10px; padding:6px 10px; display:grid; gap:2px; }
+  .camps label { display:flex; gap:8px; align-items:center; font-size:13px; text-transform:none; letter-spacing:0; color:var(--white); font-weight:500; padding:3px 0; cursor:pointer; }
+  .camps label small { color:var(--muted); font-size:11px; margin-left:auto; }
+  .prog { height:6px; border-radius:6px; background:rgba(255,255,255,.1); overflow:hidden; margin-top:4px; min-width:90px; }
+  .prog i { display:block; height:100%; background:var(--orange); }
+  .tag.pass { background:rgba(0,161,154,.18); color:#35d0c8; }
+  .tag.fail { background:var(--red-bg); color:var(--red); }
+  .tag.nc { background:rgba(255,255,255,.08); color:var(--muted); }
+  .section { margin-top:28px; }
+  .section h2 { font-size:18px; font-weight:800; margin-bottom:4px; }
+  .section .p-sub { font-size:12.5px; color:var(--muted); margin-bottom:12px; }
+  td.num, th.num { text-align:right; white-space:nowrap; }
+  .tabs { display:flex; gap:8px; margin:26px 0 0; flex-wrap:wrap; }
+  .tabs button { font-family:inherit; background:transparent; color:var(--muted); border:1px solid rgba(255,255,255,.18); border-radius:50px; padding:8px 18px; font-weight:600; font-size:13px; cursor:pointer; }
+  .tabs button.on { background:var(--orange); border-color:var(--orange); color:#fff; }
+  .rules { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:10px; margin-top:14px; }
+  .rules div { background:var(--navy); border:1px solid var(--line); border-radius:14px; padding:12px 14px; font-size:12.5px; color:var(--muted); line-height:1.5; }
+  .rules b { color:#fff; display:block; font-size:13px; margin-bottom:2px; }
 </style>
 </head>
 <body>
@@ -104,48 +122,83 @@
 <main>
   <div class="eyebrow">Ads control point</div>
   <h1>Ads Change Log</h1>
-  <p class="sub">Log every change to bidding, targets, conversions, budgets or campaign status <b>before</b> you make it. Bid strategy, conversion and automation changes start a 21-day hold so smart bidding can finish learning.</p>
+  <p class="sub">Log every change <b>before</b> you make it, with the exact previous and new values and a written success metric. Bid, target and conversion changes then hold for 21 days <b>and</b> 100 conversions, whichever is later.</p>
+
+  <div class="rules">
+    <div><b>Change Log</b>Entry required before any change is executed.</div>
+    <div><b>Hold Period</b>Bid, Target, Conversion: fixed for 21 days and 100 conversions, whichever is later.</div>
+    <div><b>Budget Control</b>At most once a week per campaign, within ±20%.</div>
+    <div><b>Testing</b>One change at a time per campaign, success metric written first.</div>
+  </div>
 
   <div class="row">
     <section class="panel">
       <h2>Reviews due <span class="count zero" id="dueCount">0</span></h2>
-      <p class="p-sub">Past hold-until with no result recorded. Open one and fill in “Result at review.”</p>
+      <p class="p-sub">Evaluation deadline reached (and 100 conversions for holds). Fill in "Result / Final Evaluation".</p>
       <ul class="mini" id="dueList"></ul>
     </section>
     <section class="panel">
       <h2>Active holds <span class="count zero" id="holdCount">0</span></h2>
-      <p class="p-sub">Don't touch bidding on these campaigns until the hold ends <b>and</b> 100 conversions, whichever is later.</p>
+      <p class="p-sub" id="holdSub">Leave bids, targets and conversion settings alone on these campaigns.</p>
       <ul class="mini" id="holdList"></ul>
     </section>
   </div>
 
-  <div class="toolbar">
-    <button class="btn" id="newBtn">+ Log a change</button>
-    <div class="grow"></div>
-    <button class="btn ghost" id="csvBtn">Export CSV</button>
+  <div class="tabs">
+    <button class="on" data-tab="log">Change log</button>
+    <button data-tab="audit">Account check</button>
+    <button data-tab="compare">Google Ads vs WhatConverts</button>
   </div>
 
-  <div class="filters">
-    <label class="f"><span class="lt">Campaign<span class="star"> *</span></span><input id="fCampaign" list="campaignList" placeholder="Any"></label>
-    <label class="f"><span class="lt">Category<span class="star"> *</span></span><select id="fCategory"><option value="">Any</option></select></label>
-    <label class="f"><span class="lt">Person<span class="star"> *</span></span><select id="fPerson"><option value="">Anyone</option></select></label>
-    <label class="f"><span class="lt">Status<span class="star"> *</span></span><select id="fStatus"><option value="">Any</option></select></label>
-    <label class="f"><span class="lt">From<span class="star"> *</span></span><input type="date" id="fFrom"></label>
-    <label class="f"><span class="lt">To<span class="star"> *</span></span><input type="date" id="fTo"></label>
-    <label class="f"><span class="lt">Source<span class="star"> *</span></span><select id="fSource"><option value="">All</option><option value="team">Team entries</option><option value="imported">Imported</option></select></label>
-    <label class="f"><span class="lt">Search<span class="star"> *</span></span><input id="fText" placeholder="Text in change / why"></label>
+  <div id="tab-log">
+    <div class="toolbar">
+      <button class="btn" id="newBtn">+ Log a change</button>
+      <div class="grow"></div>
+      <button class="btn ghost" id="csvBtn">Export CSV</button>
+    </div>
+    <div class="filters">
+      <label class="f">Campaign<input id="fCampaign" list="campaignList" placeholder="Any"></label>
+      <label class="f">Category<select id="fCategory"><option value="">Any</option></select></label>
+      <label class="f">Person<select id="fPerson"><option value="">Anyone</option></select></label>
+      <label class="f">Status<select id="fStatus"><option value="">Any</option></select></label>
+      <label class="f">From<input type="date" id="fFrom"></label>
+      <label class="f">To<input type="date" id="fTo"></label>
+      <label class="f">Source<select id="fSource"><option value="team">Team entries</option><option value="imported">Imported history</option><option value="">All</option></select></label>
+      <label class="f">Search<input id="fText" placeholder="Text in values / why"></label>
+    </div>
+    <div class="meta" id="meta">Loading…</div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Log ID</th><th>Logged (MT)</th><th>Owner</th><th>Campaigns</th><th>Category</th><th>Previous → New</th><th>Justification · Metric</th><th>Evaluation</th><th>Status</th><th></th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <div class="loadmore"><button class="btn ghost small hidden" id="moreBtn">Show more</button></div>
   </div>
-  <div class="meta" id="meta">Loading…</div>
 
-  <div class="tablewrap">
-    <table>
-      <thead><tr><th>When (MT)</th><th>By</th><th>Campaign</th><th>Category</th><th>What changed</th><th>Why</th><th>Hold until</th><th>Status</th><th></th></tr></thead>
-      <tbody id="rows"></tbody>
-    </table>
+  <div id="tab-audit" class="hidden">
+    <div class="section">
+      <h2>Guardrail checks</h2>
+      <p class="p-sub" id="auditSub">From the daily Google Ads snapshot.</p>
+      <div class="tablewrap"><table><thead><tr><th>Rule</th><th>Result</th><th>Detail</th></tr></thead><tbody id="checkRows"></tbody></table></div>
+    </div>
+    <div class="section">
+      <h2>Settings changes with no log entry</h2>
+      <p class="p-sub">Status, bidding strategy, tCPA or tROAS changed between two daily snapshots and nobody logged it.</p>
+      <div class="tablewrap"><table><thead><tr><th>Campaign</th><th>Between</th><th>What changed</th></tr></thead><tbody id="unloggedRows"></tbody></table></div>
+    </div>
   </div>
-  <div class="loadmore"><button class="btn ghost small hidden" id="moreBtn">Show more</button></div>
 
-  <p class="api">Read-only JSON for the Weekly Ads Scorecard: <code>/api/changelog?view=holds</code> (add <code>&amp;campaign=…</code> for one campaign).</p>
+  <div id="tab-compare" class="hidden">
+    <div class="section">
+      <h2>Google Ads conversions vs WhatConverts leads</h2>
+      <p class="p-sub" id="cmpSub">Google Ads conversions drive the 100-conversion hold. WhatConverts google/cpc leads are shown next to them as a check.</p>
+      <div class="toolbar" style="margin:8px 0 12px"><select id="cmpWin" style="width:auto"><option value="compare7">Last 7 days</option><option value="compare30" selected>Last 30 days</option></select></div>
+      <div class="tablewrap"><table><thead><tr><th>Campaign</th><th class="num">Cost</th><th class="num">Google conv.</th><th class="num">WC leads</th><th class="num">WC quotable</th><th class="num">WC ÷ Google</th><th class="num">Cost / WC lead</th></tr></thead><tbody id="cmpRows"></tbody></table></div>
+    </div>
+  </div>
+
+  <p class="api">Read-only JSON: <code>/api/changelog?view=holds</code> (Scorecard) · <code>/api/changelog?view=audit</code></p>
 </main>
 
 <datalist id="campaignList"></datalist>
@@ -156,24 +209,28 @@
     <div class="m-body">
       <div class="full banner red hidden" id="conflictBanner"></div>
       <div class="full banner amber hidden" id="budgetBanner"></div>
-      <div class="full banner info hidden" id="readonlyBanner">Imported from Google Ads change history. Read-only.</div>
-      <label class="f"><span class="lt">Date/time (MT)<span class="star"> *</span></span><input id="iTs" disabled></label>
-      <label class="f req"><span class="lt">Changed by
-        <span class="star"> *</span></span><select id="iBy"></select>
-        <input id="iByOther" class="hidden" placeholder="Name">
-      </label>
+      <div class="full banner info hidden" id="readonlyBanner">Imported from Google Ads change history. Read-only; the new rules don't apply to it.</div>
+      <label class="f"><span class="lt">Log ID</span><input id="iLogId" disabled></label>
+      <label class="f"><span class="lt">Log Date &amp; Time (MT)</span><input id="iTs" disabled></label>
+      <label class="f req"><span class="lt">Author / Owner<span class="star"> *</span></span><select id="iBy"></select><input id="iByOther" class="hidden" placeholder="Name of the person executing the change"></label>
       <label class="f req"><span class="lt">Platform<span class="star"> *</span></span><select id="iPlatform"></select></label>
-      <label class="f req"><span class="lt">Campaign<span class="star"> *</span></span><input id="iCampaign" list="campaignList" autocomplete="off"></label>
-      <label class="f req"><span class="lt">Category<span class="star"> *</span></span><select id="iCategory"></select></label>
+      <div class="f full req" id="campWrap"><span class="lt" style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em">Affected Campaigns<span class="star"> *</span></span>
+        <input id="campFilter" placeholder="Filter campaigns…" style="margin:4px 0 6px">
+        <div class="camps" id="campList"></div>
+        <input id="campOther" placeholder="Other campaign name (non-Google platforms)" style="margin-top:6px">
+      </div>
+      <label class="f req"><span class="lt">Change Category<span class="star"> *</span></span><select id="iCategory"></select></label>
       <label class="f req"><span class="lt">Status<span class="star"> *</span></span><select id="iStatus"></select></label>
       <label class="f budget hidden req"><span class="lt">Old daily budget ($)<span class="star"> *</span></span><input id="iOld" inputmode="decimal"></label>
       <label class="f budget hidden req"><span class="lt">New daily budget ($)<span class="star"> *</span></span><input id="iNew" inputmode="decimal"></label>
-      <label class="f full req"><span class="lt">What changed (from → to)<span class="star"> *</span></span><textarea id="iChange" placeholder="tCPA $150 → tROAS 18x"></textarea></label>
-      <label class="f full req"><span class="lt">Why<span class="star"> *</span></span><textarea id="iWhy"></textarea></label>
-      <label class="f full" id="metricLabel"><span class="lt">Success metric + target<span class="star"> *</span></span><input id="iMetric" placeholder="e.g. CPA under $160 on 30+ conversions"></label>
-      <label class="f"><span class="lt">Hold until<span class="star"> *</span></span><input id="iHold" disabled></label>
+      <label class="f req"><span class="lt">Previous Value<span class="star"> *</span></span><textarea id="iPrev" placeholder="Exact original setting, e.g. tCPA $220"></textarea></label>
+      <label class="f req"><span class="lt">New Value<span class="star"> *</span></span><textarea id="iNext" placeholder="Setting to be applied, e.g. tCPA $200"></textarea></label>
+      <label class="f full req"><span class="lt">Justification / Objective<span class="star"> *</span></span><textarea id="iWhy" placeholder="Technical reason for the change"></textarea></label>
+      <label class="f full req"><span class="lt">Defined Success Metric<span class="star"> *</span></span><input id="iMetric" placeholder="Specific KPI, e.g. CPA under $200 on 100+ conversions"></label>
+      <label class="f"><span class="lt">Evaluation Deadline</span><input id="iHold" disabled></label>
       <div class="f" id="holdNote" style="font-size:12px;color:var(--muted);align-self:end;padding-bottom:10px"></div>
-      <label class="f full" id="resultLabel"><span class="lt">Result at review<span class="star"> *</span></span><textarea id="iResult" placeholder="Fill in on or after the hold-until date"></textarea></label>
+      <label class="f full" id="resultLabel"><span class="lt">Result / Final Evaluation</span><textarea id="iResult" placeholder="Fill in on or after the evaluation deadline"></textarea></label>
+      <div class="full" id="impDetail"></div>
     </div>
     <div class="m-foot">
       <span class="err" id="formErr"></span>
@@ -188,14 +245,13 @@
 <script>
 (() => {
   const API = '/api/changelog';
-  const SEED = '/api/changelog?view=history';
   const TZ = 'America/Denver';
   const PEOPLE = ['Dustin', 'geckoss217', 'romeroruiztyrone', 'Liquet Creative', 'gerardo'];
   const PLATFORMS = ['Google Ads', 'Microsoft Ads', 'Meta', 'Reddit', 'ChatGPT Ads'];
-  const CATEGORIES = ['Bid strategy/targets', 'Conversion tracking', 'Budget', 'Pause/enable', 'Keywords', 'Negative keywords', 'Ads/assets', 'Location', 'Audience', 'AI Max/automation', 'Rules', 'Other'];
+  const CATEGORIES = ['Bid', 'Target', 'Conversion', 'Budget', 'Keywords', 'Structure'];
   const STATUSES = ['Planned', 'Live', 'In hold', 'Reviewed – keep', 'Reviewed – revert'];
-  const HOLD_CATS = ['Bid strategy/targets', 'Conversion tracking', 'AI Max/automation'];
-  const METRIC_CATS = ['Bid strategy/targets', 'Conversion tracking', 'Budget'];
+  const HOLD_CATS = ['Bid', 'Target', 'Conversion'];
+  const ACCOUNT = 'Account level';
   const PAGE = 100;
 
   const $ = id => document.getElementById(id);
@@ -205,30 +261,30 @@
   const fmtWhen = iso => new Date(iso).toLocaleString('en-US', { timeZone: TZ, month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
   const fmtDay = ymd => ymd ? new Date(ymd + 'T12:00:00Z').toLocaleDateString('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric', year: 'numeric' }) : '';
   const addDays = (ymd, n) => { const d = new Date(ymd + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
-  const holdFor = (cat, iso) => HOLD_CATS.includes(cat) ? addDays(mtDate(new Date(iso)), 21) : '';
-  const daysBetween = (a, b) => Math.round((new Date(b + 'T12:00:00Z') - new Date(a + 'T12:00:00Z')) / 864e5);
   const today = () => mtDate(new Date());
-  const isActiveHold = e => e.holdUntil && e.holdUntil >= today() && !String(e.status || '').startsWith('Reviewed');
   const opts = (sel, list, first) => { sel.innerHTML = (first ?? '') + list.map(v => `<option>${esc(v)}</option>`).join(''); };
   const money = v => parseFloat(String(v).replace(/[^0-9.\-]/g, ''));
+  const usd = n => '$' + Number(n || 0).toLocaleString('en-US', { maximumFractionDigits: 0 });
+  const isAccount = e => !e.campaigns || !e.campaigns.length || e.campaigns.some(c => norm(c) === norm(ACCOUNT));
+  const overlaps = (a, b) => isAccount(a) || isAccount(b) || (a.campaignIds || []).some(x => (b.campaignIds || []).includes(x)) || a.campaigns.some(x => b.campaigns.map(norm).includes(norm(x)));
 
-  let team = [], seed = [], all = [], shown = PAGE, editing = null, apiOk = true;
+  let team = [], hist = [], campaigns = [], all = [], shown = PAGE, editing = null, apiOk = true, dataThrough = '', auditData = null;
   const teamKey = () => { try { return localStorage.getItem('ecChangelogKey') || ''; } catch { return ''; } };
 
   async function load() {
-    const [t, s] = await Promise.all([
-      fetch(API, { cache: 'no-store' }).then(r => r.ok ? r.json() : Promise.reject(r.status)).catch(e => { apiOk = false; console.error('API', e); return { entries: [] }; }),
-      fetch(SEED).then(r => r.ok ? r.json() : { entries: [] }).catch(() => ({ entries: [] })),
+    const [t, h] = await Promise.all([
+      fetch(API, { cache: 'no-store' }).then(r => r.ok ? r.json() : Promise.reject(r.status)).catch(e => { apiOk = false; console.error('API', e); return { entries: [], campaigns: [] }; }),
+      fetch(API + '?view=history').then(r => r.ok ? r.json() : { entries: [] }).catch(() => ({ entries: [] })),
     ]);
-    team = t.entries || [];
-    seed = (s.entries || []).map(e => ({ ...e, holdUntil: holdFor(e.category, e.ts) }));
-    all = team.concat(seed).sort((a, b) => b.ts.localeCompare(a.ts));
-    buildLists(); render();
+    team = t.entries || []; campaigns = t.campaigns || []; dataThrough = t.dataThrough || '';
+    hist = h.entries || [];
+    merge(); buildLists(); render();
   }
+  const merge = () => { all = team.concat(hist).sort((a, b) => b.ts.localeCompare(a.ts)); };
 
   function buildLists() {
-    const camps = [...new Set(all.map(e => e.campaign).filter(Boolean))];
-    $('campaignList').innerHTML = camps.slice(0, 400).map(c => `<option value="${esc(c)}">`).join('');
+    const names = [...new Set(campaigns.map(c => c.name).concat(all.flatMap(e => e.campaigns || [])).filter(Boolean))];
+    $('campaignList').innerHTML = names.slice(0, 500).map(c => `<option value="${esc(c)}">`).join('');
     const people = [...new Set(PEOPLE.concat(all.map(e => e.by).filter(Boolean)))];
     const cur = $('fPerson').value; opts($('fPerson'), people, '<option value="">Anyone</option>'); $('fPerson').value = cur;
   }
@@ -237,103 +293,134 @@
     const c = norm($('fCampaign').value), cat = $('fCategory').value, p = $('fPerson').value, st = $('fStatus').value;
     const from = $('fFrom').value, to = $('fTo').value, src = $('fSource').value, q = norm($('fText').value);
     return all.filter(e => {
-      if (c && !norm(e.campaign).includes(c)) return false;
+      if (src === 'team' && e.imported) return false;
+      if (src === 'imported' && !e.imported) return false;
+      if (c && !norm((e.campaigns || []).join(' ')).includes(c)) return false;
       if (cat && e.category !== cat) return false;
       if (p && e.by !== p) return false;
       if (st && e.status !== st) return false;
       const d = mtDate(new Date(e.ts));
       if (from && d < from) return false;
       if (to && d > to) return false;
-      if (src === 'team' && e.imported) return false;
-      if (src === 'imported' && !e.imported) return false;
-      if (q && !norm(e.change + ' ' + e.why + ' ' + e.result).includes(q)) return false;
+      if (q && !norm([e.prev, e.next, e.change, e.why, e.metric, e.result, e.logId].join(' ')).includes(q)) return false;
       return true;
     });
   }
 
   function statusTag(e) {
+    if (e.imported) return '<span class="tag imp">Imported</span>';
     const s = e.status || '';
     const cls = s === 'In hold' ? 'hold' : s === 'Reviewed – keep' ? 'keep' : s === 'Reviewed – revert' ? 'revert' : '';
-    return `<span class="tag ${cls}">${esc(s)}</span>` + (e.imported ? ' <span class="tag imp">Imported</span>' : '') + (e.override ? ' <span class="tag ovr">Override</span>' : '');
+    return `<span class="tag ${cls}">${esc(s)}</span>` + (e.override ? ` <span class="tag ovr" title="${esc(e.overrideOf)}">Override</span>` : '');
+  }
+  function evalCell(e) {
+    if (e.imported) return '';
+    const conv = e.conv || { google: 0 };
+    let h = `<div>${esc(fmtDay(e.deadline))}</div>`;
+    if (e.hold) {
+      const pct = Math.min(100, conv.google);
+      h += `<div class="meta" style="margin:2px 0 0">${conv.google} / 100 conv · WC ${conv.wcLeads}</div><div class="prog"><i style="width:${pct}%"></i></div>`;
+    }
+    if (e.holdActive) h += `<span class="tag hold" style="margin-top:4px">Hold</span>`;
+    else if (e.evalReady) h += `<span class="tag" style="margin-top:4px">Review due</span>`;
+    return h;
   }
 
   function render() {
     const rows = filtered();
-    $('meta').textContent = `${rows.length.toLocaleString()} entries · ${team.length} team · ${seed.length.toLocaleString()} imported` + (apiOk ? '' : ' · ⚠ Shared storage not reachable. Team entries can’t load or save right now.');
-    $('rows').innerHTML = rows.slice(0, shown).map(e => `
-      <tr>
+    $('meta').textContent = `${rows.length.toLocaleString()} shown · ${team.length} team entries · ${hist.length.toLocaleString()} imported` + (dataThrough ? ` · conversions through ${fmtDay(dataThrough)}` : '') + (apiOk ? '' : ' · ⚠ Shared storage not reachable. Team entries can’t load or save right now.');
+    $('rows').innerHTML = rows.slice(0, shown).map(e => {
+      const change = e.imported ? e.change : `${e.prev} → ${e.next}`;
+      const camps = (e.campaigns || []).join('\n') + (e.adGroup ? `\n${e.adGroup}` : '');
+      return `<tr>
+        <td class="when"><b style="color:#fff">${esc(e.logId || '')}</b></td>
         <td class="when">${esc(fmtWhen(e.ts))}</td>
         <td>${esc(e.by)}</td>
-        <td>${esc(e.campaign)}${e.adGroup ? `<div class="meta" style="margin:2px 0 0">${esc(e.adGroup)}</div>` : ''}</td>
+        <td class="chg"><div class="clamp">${esc(camps)}</div></td>
         <td><span class="tag">${esc(e.category)}</span></td>
-        <td class="chg"><div class="clamp">${esc(e.change)}</div>${e.change && e.change.length > 160 ? '<button class="more">more</button>' : ''}</td>
-        <td class="chg"><div class="clamp">${esc(e.why)}</div>${e.result ? `<div class="meta" style="margin:4px 0 0"><b>Result:</b> ${esc(e.result)}</div>` : ''}</td>
-        <td class="when">${esc(fmtDay(e.holdUntil))}</td>
+        <td class="chg"><div class="clamp">${esc(change)}</div>${change && change.length > 160 ? '<button class="more">more</button>' : ''}</td>
+        <td class="chg"><div class="clamp">${esc(e.why || '')}</div>${e.metric ? `<div class="meta" style="margin:4px 0 0"><b>Metric:</b> ${esc(e.metric)}</div>` : ''}${e.result ? `<div class="meta" style="margin:4px 0 0"><b>Result:</b> ${esc(e.result)}</div>` : ''}</td>
+        <td class="when">${evalCell(e)}</td>
         <td>${statusTag(e)}</td>
         <td><button class="btn ghost small" data-id="${esc(e.id)}">${e.imported ? 'View' : 'Edit'}</button></td>
-      </tr>`).join('') || '<tr><td colspan="9" class="empty">No entries match these filters.</td></tr>';
+      </tr>`;
+    }).join('') || '<tr><td colspan="10" class="empty">No entries match these filters.</td></tr>';
     $('moreBtn').classList.toggle('hidden', rows.length <= shown);
     renderPanels();
   }
 
   function renderPanels() {
-    const t = today();
-    const due = team.filter(e => e.holdUntil && e.holdUntil < t && !String(e.result || '').trim())
-      .sort((a, b) => a.holdUntil.localeCompare(b.holdUntil));
+    const due = team.filter(e => e.evalReady).sort((a, b) => a.deadline.localeCompare(b.deadline));
     $('dueCount').textContent = due.length; $('dueCount').classList.toggle('zero', !due.length);
-    $('dueList').innerHTML = due.map(e => `<li><div><div class="c">${esc(e.campaign)}</div><div class="m">${esc(e.category)} · ${esc(e.by)} · hold ended ${esc(fmtDay(e.holdUntil))}</div></div><button class="btn small" data-id="${esc(e.id)}">Review</button></li>`).join('') || '<li class="empty">Nothing due.</li>';
-
-    const byCamp = new Map();
-    all.filter(isActiveHold).forEach(e => {
-      const k = norm(e.campaign), cur = byCamp.get(k);
-      if (!cur || e.holdUntil > cur.holdUntil) byCamp.set(k, e);
-    });
-    const holds = [...byCamp.values()].sort((a, b) => a.holdUntil.localeCompare(b.holdUntil));
+    $('dueList').innerHTML = due.map(e => `<li><div><div class="c">${esc(e.logId)} · ${esc(e.campaigns.join(', '))}</div><div class="m">${esc(e.category)} · ${esc(e.by)} · deadline ${esc(fmtDay(e.deadline))}</div></div><button class="btn small" data-id="${esc(e.id)}">Review</button></li>`).join('') || '<li class="empty">Nothing due.</li>';
+    const holds = team.filter(e => e.holdActive).sort((a, b) => a.deadline.localeCompare(b.deadline));
     $('holdCount').textContent = holds.length; $('holdCount').classList.toggle('zero', !holds.length);
     $('holdList').innerHTML = holds.map(e => {
-      const d = daysBetween(t, e.holdUntil);
-      return `<li><div><div class="c">${esc(e.campaign || '(account level)')}</div><div class="m">${esc(e.category)} · until ${esc(fmtDay(e.holdUntil))}${e.imported ? ' · imported' : ''}</div></div><div class="days">${d}<small>${d === 1 ? 'day left' : 'days left'}</small></div></li>`;
+      const c = e.conv || { google: 0 };
+      return `<li><div><div class="c">${esc(e.logId)} · ${esc(e.campaigns.join(', '))}</div><div class="m">${esc(e.category)} · ${c.google}/100 conv · until ${esc(fmtDay(e.deadline))}</div><div class="prog"><i style="width:${Math.min(100, c.google)}%"></i></div></div><div class="days">${e.daysLeft}<small>${e.daysLeft === 1 ? 'day left' : 'days left'}</small>${e.convLeft ? `<small>${e.convLeft} conv to go</small>` : ''}</div></li>`;
     }).join('') || '<li class="empty">No campaigns are in a hold.</li>';
   }
 
+  // ── audit + compare ──
+  async function loadAudit() {
+    if (auditData) return renderAudit();
+    try { auditData = await fetch(API + '?view=audit', { cache: 'no-store' }).then(r => r.json()); } catch { auditData = null; }
+    renderAudit();
+  }
+  function renderAudit() {
+    const a = auditData;
+    if (!a || !a.checks) { $('checkRows').innerHTML = '<tr><td colspan="3" class="empty">Account check not available.</td></tr>'; return; }
+    $('auditSub').textContent = `Google Ads snapshot ${fmtDay(a.snapshotDate)} · conversions through ${fmtDay(a.dataThrough)}.`;
+    const lbl = { pass: ['pass', 'Pass'], fail: ['fail', 'Fail'], pending: ['nc', 'Pending'], 'not-checked': ['nc', 'Not checked'] };
+    $('checkRows').innerHTML = a.checks.map(c => `<tr><td>${esc(c.rule)}</td><td><span class="tag ${lbl[c.status][0]}">${lbl[c.status][1]}</span></td><td class="chg">${esc(c.detail)}</td></tr>`).join('');
+    $('unloggedRows').innerHTML = (a.unlogged || []).map(u => `<tr><td>${esc(u.campaign)}</td><td class="when">${esc(u.between)}</td><td>${esc(u.change)}</td></tr>`).join('') || '<tr><td colspan="3" class="empty">None found.</td></tr>';
+    renderCompare();
+  }
+  function renderCompare() {
+    const a = auditData; if (!a) return;
+    const w = a[$('cmpWin').value]; if (!w) return;
+    $('cmpSub').textContent = `${fmtDay(w.from)} to ${fmtDay(w.to)}. Google Ads conversions drive the 100-conversion hold; WhatConverts google/cpc leads are the check. "Unattributed" = WhatConverts leads from Google with no campaign ID.`;
+    const row = (name, r, strong) => `<tr${strong ? ' style="font-weight:700"' : ''}><td>${esc(name)}</td><td class="num">${usd(r.cost)}</td><td class="num">${r.gconv}</td><td class="num">${r.wcl}</td><td class="num">${r.wcq}</td><td class="num">${r.gconv ? (r.wcl / r.gconv).toFixed(2) : '—'}</td><td class="num">${r.wcl && r.cost ? usd(r.cost / r.wcl) : '—'}</td></tr>`;
+    $('cmpRows').innerHTML = w.rows.map(r => row(r.id === 'unattributed' ? 'Unattributed (WhatConverts only)' : r.name, r)).join('') + row('Total', w.total, true);
+  }
+
   // ── form ──
-  function activeHoldsFor(campaign, exceptId) {
-    const c = norm(campaign); if (!c) return [];
-    return all.filter(e => e.id !== exceptId && norm(e.campaign) === c && isActiveHold(e));
+  function renderCampList(selected) {
+    const f = norm($('campFilter').value);
+    const sel = new Set(selected || [...document.querySelectorAll('#campList input:checked')].map(x => x.value));
+    const items = [{ id: '', name: ACCOUNT, status: '' }].concat(campaigns);
+    $('campList').innerHTML = items.filter(c => !f || norm(c.name).includes(f) || sel.has(c.name)).map(c =>
+      `<label><input type="checkbox" value="${esc(c.name)}" data-cid="${esc(c.id)}" ${sel.has(c.name) ? 'checked' : ''}> ${esc(c.name)}<small>${esc(c.status ? c.status.toLowerCase() : '')}${c.channel === 'PERFORMANCE_MAX' ? ' · pmax' : ''}</small></label>`).join('');
+  }
+  function selectedCampaigns() {
+    const boxes = [...document.querySelectorAll('#campList input:checked')];
+    let names = boxes.map(b => b.value), ids = boxes.map(b => b.dataset.cid).filter(Boolean);
+    const other = $('campOther').value.split(';').map(s => s.trim()).filter(Boolean);
+    names = names.concat(other);
+    if (names.includes(ACCOUNT)) return { campaigns: [ACCOUNT], campaignIds: [] };
+    return { campaigns: [...new Set(names)], campaignIds: [...new Set(ids)] };
   }
   function updateForm() {
-    const cat = $('iCategory').value, camp = $('iCampaign').value, ro = editing && editing.imported;
+    const cat = $('iCategory').value, ro = editing && editing.imported;
     const ts = editing ? editing.ts : new Date().toISOString();
-    const hold = editing && editing.category === cat && editing.holdUntil ? editing.holdUntil : holdFor(cat, ts);
-    $('iHold').value = hold ? fmtDay(hold) : '—';
-    $('holdNote').textContent = HOLD_CATS.includes(cat) ? 'and 100 conversions, whichever is later.' : '';
+    const deadline = editing && editing.deadline ? editing.deadline : addDays(mtDate(new Date(ts)), 21);
+    $('iHold').value = ro ? '—' : fmtDay(deadline);
+    $('holdNote').textContent = ro ? '' : HOLD_CATS.includes(cat) ? 'Hold: fixed until this date AND 100 conversions, whichever is later.' : 'Evaluate on or after this date.';
     $('iByOther').classList.toggle('hidden', $('iBy').value !== '__other');
     document.querySelectorAll('.budget').forEach(el => el.classList.toggle('hidden', cat !== 'Budget'));
-    $('metricLabel').classList.toggle('req', METRIC_CATS.includes(cat));
-
-    // conflict (new entries only; edits keep their original flag)
-    const conflicts = (!editing && !ro) ? activeHoldsFor(camp) : [];
+    if (ro || editing) { $('conflictBanner').classList.add('hidden'); $('budgetBanner').classList.add('hidden'); return; }
+    const me = { ...selectedCampaigns(), category: cat, ts };
+    const conflicts = me.campaigns.length ? team.filter(x => (x.holdActive || x.pending) && overlaps(me, x)) : [];
     const cb = $('conflictBanner');
-    if (conflicts.length) {
-      const h = conflicts.sort((a, b) => b.holdUntil.localeCompare(a.holdUntil))[0];
-      cb.innerHTML = `<b>Active hold on this campaign until ${esc(fmtDay(h.holdUntil))}</b> (${esc(h.category)}, logged by ${esc(h.by)} on ${esc(fmtWhen(h.ts))}). Changing it now resets learning. You can still save, but this entry will be flagged <b>Override</b>.`;
-    }
+    cb.innerHTML = conflicts.length ? `<b>${conflicts.length} open change(s) on these campaigns.</b> ` + conflicts.slice(0, 4).map(x => `${esc(x.logId)} (${esc(x.category)}${x.holdActive ? `, hold until ${esc(fmtDay(x.deadline))}${x.convLeft ? ` + ${x.convLeft} conv` : ''}` : ', not evaluated yet'})`).join('; ') + '. One change at a time: you can still save, but this entry will be flagged <b>Override</b>.' : '';
     cb.classList.toggle('hidden', !conflicts.length);
-
-    // budget warnings
     const bb = $('budgetBanner'), warn = [];
-    if (cat === 'Budget' && !ro) {
-      const last = all.filter(e => e.category === 'Budget' && e.id !== (editing && editing.id) && norm(e.campaign) === norm(camp) && norm(camp))
-        .sort((a, b) => b.ts.localeCompare(a.ts))[0];
-      if (last) {
-        const age = (new Date(ts) - new Date(last.ts)) / 864e5;
-        if (age >= 0 && age < 7) warn.push(`Last budget change on this campaign was <b>${age < 1 ? 'less than a day' : Math.floor(age) + ' day' + (Math.floor(age) === 1 ? '' : 's')} ago</b> (${esc(fmtWhen(last.ts))}). Wait 7 days between budget changes.`);
-      }
+    if (cat === 'Budget' && me.campaigns.length) {
+      const last = team.filter(x => x.category === 'Budget' && overlaps(me, x)).sort((a, b) => b.ts.localeCompare(a.ts))[0];
+      if (last) { const age = (Date.now() - new Date(last.ts)) / 864e5; if (age < 7) warn.push(`Last budget change (${esc(last.logId)}) was <b>${age < 1 ? 'less than a day' : Math.floor(age) + ' days'} ago</b>. Budget changes are limited to once a week.`); }
       const o = money($('iOld').value), n = money($('iNew').value);
-      if (o > 0 && !isNaN(n)) {
-        const pct = (n - o) / o * 100;
-        if (Math.abs(pct) > 20) warn.push(`This is a <b>${pct > 0 ? '+' : ''}${pct.toFixed(0)}%</b> change. Keep budget moves within 20%.`);
-      }
+      if (o > 0 && !isNaN(n)) { const pct = (n - o) / o * 100; if (Math.abs(pct) > 20) warn.push(`This is a <b>${pct > 0 ? '+' : ''}${pct.toFixed(0)}%</b> change. The limit is ±20%.`); }
+      if (warn.length) warn.push('You can still save; it will be flagged <b>Override</b>.');
     }
     bb.innerHTML = warn.join('<br>'); bb.classList.toggle('hidden', !warn.length);
   }
@@ -341,7 +428,7 @@
   function openForm(e) {
     editing = e || null;
     const ro = !!(e && e.imported);
-    $('dlgTitle').textContent = !e ? 'Log a change' : ro ? 'Imported change' : 'Edit change';
+    $('dlgTitle').textContent = !e ? 'Log a change' : ro ? 'Imported change' : `Edit ${e.logId || 'change'}`;
     $('readonlyBanner').classList.toggle('hidden', !ro);
     $('formErr').textContent = '';
     const people = [...new Set(PEOPLE.concat(team.map(x => x.by).filter(Boolean)))];
@@ -349,17 +436,23 @@
     if (by && !people.includes(by)) people.push(by);
     $('iBy').innerHTML = '<option value="">Select…</option>' + people.map(p => `<option>${esc(p)}</option>`).join('') + '<option value="__other">Other…</option>';
     $('iBy').value = by; $('iByOther').value = '';
+    $('iLogId').value = e ? (e.logId || '—') : 'Assigned when saved';
     $('iTs').value = e ? fmtWhen(e.ts) + ' MT' : 'Set when saved';
     $('iPlatform').value = e ? e.platform : 'Google Ads';
-    $('iCampaign').value = e ? e.campaign : '';
+    $('campFilter').value = '';
+    const known = new Set([ACCOUNT].concat(campaigns.map(c => c.name)));
+    const sel = e ? e.campaigns : [];
+    renderCampList(sel.filter(x => known.has(x)));
+    $('campOther').value = sel.filter(x => !known.has(x)).join(' ; ');
     $('iCategory').value = e ? e.category : '';
-    $('iStatus').value = e ? e.status : 'Planned';
+    $('iStatus').value = e && !ro ? e.status : 'Planned';
     $('iOld').value = e ? e.oldAmount || '' : ''; $('iNew').value = e ? e.newAmount || '' : '';
-    $('iChange').value = e ? e.change : ''; $('iWhy').value = e ? e.why : '';
-    $('iMetric').value = e ? e.metric : ''; $('iResult').value = e ? e.result : '';
-    $('form').querySelectorAll('input:not(#iTs):not(#iHold),select,textarea').forEach(el => el.disabled = ro);
+    $('iPrev').value = e ? (ro ? e.change : e.prev) : ''; $('iNext').value = e && !ro ? e.next : '';
+    $('iWhy').value = e ? e.why || '' : ''; $('iMetric').value = e ? e.metric || '' : ''; $('iResult').value = e ? e.result || '' : '';
+    $('form').querySelectorAll('input:not(#iTs):not(#iHold):not(#iLogId),select,textarea').forEach(el => el.disabled = ro);
     $('saveBtn').classList.toggle('hidden', ro);
-    $('resultLabel').classList.toggle('hidden', !e);
+    $('resultLabel').classList.toggle('hidden', !e || ro);
+    $('impDetail').innerHTML = e && !ro && e.conv ? `<div class="meta">Since ${esc(fmtDay(e.conv.since))} (${esc(e.conv.basis)}): Google Ads ${e.conv.google} conversions · WhatConverts ${e.conv.wcLeads} leads, ${e.conv.wcQuotable} quotable${e.override ? ` · <b style="color:var(--red)">Override:</b> ${esc(e.overrideOf)}` : ''}</div>` : '';
     updateForm();
     $('dlg').showModal();
   }
@@ -370,35 +463,26 @@
     const cat = $('iCategory').value;
     const by = $('iBy').value === '__other' ? $('iByOther').value.trim() : $('iBy').value;
     const body = {
-      by, platform: $('iPlatform').value, campaign: $('iCampaign').value.trim(), category: cat,
-      status: $('iStatus').value, change: $('iChange').value.trim(), why: $('iWhy').value.trim(),
-      metric: $('iMetric').value.trim(), result: $('iResult').value.trim(),
-      oldAmount: $('iOld').value.trim(), newAmount: $('iNew').value.trim(),
+      by, platform: $('iPlatform').value, ...selectedCampaigns(), category: cat, status: $('iStatus').value,
+      prev: $('iPrev').value.trim(), next: $('iNext').value.trim(), why: $('iWhy').value.trim(), metric: $('iMetric').value.trim(),
+      result: $('iResult').value.trim(), oldAmount: $('iOld').value.trim(), newAmount: $('iNew').value.trim(),
     };
     const miss = [];
-    if (!body.by) miss.push('Changed by'); if (!body.campaign) miss.push('Campaign'); if (!cat) miss.push('Category');
-    if (!body.change) miss.push('What changed'); if (!body.why) miss.push('Why');
-    if (METRIC_CATS.includes(cat) && !body.metric) miss.push('Success metric + target');
+    if (!body.by) miss.push('Author / Owner'); if (!body.campaigns.length) miss.push('Affected Campaigns'); if (!cat) miss.push('Change Category');
+    if (!body.prev) miss.push('Previous Value'); if (!body.next) miss.push('New Value'); if (!body.why) miss.push('Justification');
+    if (!body.metric) miss.push('Success Metric');
     if (cat === 'Budget' && (!body.oldAmount || !body.newAmount)) miss.push('Old and new budget');
     if (miss.length) { $('formErr').textContent = 'Required: ' + miss.join(', '); return; }
-    if (body.change && cat === 'Budget' && !/\$|→|->|to/i.test(body.change)) body.change = `$${body.oldAmount} → $${body.newAmount}. ${body.change}`;
-
     $('saveBtn').disabled = true; $('formErr').textContent = '';
     try {
       let r = await send(body);
-      if (r.status === 401) {
-        const k = prompt('Enter the team key to save changes:');
-        if (k) { try { localStorage.setItem('ecChangelogKey', k); } catch {} r = await send(body); }
-      }
+      if (r.status === 401) { const k = prompt('Enter the team key to save changes:'); if (k) { try { localStorage.setItem('ecChangelogKey', k); } catch {} r = await send(body); } }
       const out = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(out.error || `Save failed (${r.status})`);
       const i = team.findIndex(x => x.id === out.entry.id);
-      if (i >= 0) team[i] = out.entry; else team.push(out.entry);
-      all = team.concat(seed).sort((a, b) => b.ts.localeCompare(a.ts));
-      buildLists(); render(); $('dlg').close();
-    } catch (err) {
-      $('formErr').textContent = err.message;
-    } finally { $('saveBtn').disabled = false; }
+      if (i >= 0) team[i] = out.entry; else team.unshift(out.entry);
+      merge(); buildLists(); render(); $('dlg').close();
+    } catch (err) { $('formErr').textContent = err.message; } finally { $('saveBtn').disabled = false; }
   }
   function send(body) {
     const url = editing ? `${API}?id=${encodeURIComponent(editing.id)}` : API;
@@ -406,10 +490,11 @@
   }
 
   function exportCsv() {
-    const cols = [['Date/time (MT)', e => fmtWhen(e.ts)], ['Changed by', e => e.by], ['Platform', e => e.platform], ['Campaign', e => e.campaign], ['Ad group', e => e.adGroup || ''],
-      ['Category', e => e.category], ['What changed', e => e.change], ['Why', e => e.why], ['Old budget', e => e.oldAmount || ''], ['New budget', e => e.newAmount || ''],
-      ['Hold until', e => e.holdUntil || ''], ['Success metric + target', e => e.metric], ['Result at review', e => e.result], ['Status', e => e.status],
-      ['Override', e => e.override ? 'Yes' : ''], ['Source', e => e.imported ? 'Imported' : 'Team']];
+    const cols = [['Log ID', e => e.logId || ''], ['Log Date & Time (MT)', e => fmtWhen(e.ts)], ['Author / Owner', e => e.by], ['Platform', e => e.platform], ['Affected Campaigns', e => (e.campaigns || []).join('; ')], ['Ad group', e => e.adGroup || ''],
+      ['Change Category', e => e.category], ['Previous Value', e => e.imported ? '' : e.prev], ['New Value', e => e.imported ? '' : e.next], ['Change (imported)', e => e.imported ? e.change : ''],
+      ['Justification / Objective', e => e.why || ''], ['Defined Success Metric', e => e.metric || ''], ['Old budget', e => e.oldAmount || ''], ['New budget', e => e.newAmount || ''],
+      ['Evaluation Deadline', e => e.deadline || ''], ['Google conv. since', e => e.conv ? e.conv.google : ''], ['WC leads since', e => e.conv ? e.conv.wcLeads : ''],
+      ['Result / Final Evaluation', e => e.result || ''], ['Status', e => e.status], ['Override', e => e.override ? e.overrideOf || 'Yes' : ''], ['Source', e => e.imported ? 'Imported' : 'Team']];
     const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
     const csv = [cols.map(c => q(c[0])).join(',')].concat(filtered().map(e => cols.map(c => q(c[1](e))).join(','))).join('\r\n');
     const a = document.createElement('a');
@@ -424,13 +509,24 @@
   opts($('iCategory'), CATEGORIES, '<option value="">Select…</option>');
   opts($('iStatus'), STATUSES);
   ['fCampaign', 'fCategory', 'fPerson', 'fStatus', 'fFrom', 'fTo', 'fSource', 'fText'].forEach(id => $(id).addEventListener('input', () => { shown = PAGE; render(); }));
-  ['iCategory', 'iCampaign', 'iBy', 'iOld', 'iNew'].forEach(id => $(id).addEventListener('input', updateForm));
-  $('iCategory').addEventListener('change', () => { if (!editing && HOLD_CATS.includes($('iCategory').value) && $('iStatus').value === 'Live') $('iStatus').value = 'In hold'; });
+  ['iCategory', 'iBy', 'iOld', 'iNew', 'campOther'].forEach(id => $(id).addEventListener('input', updateForm));
+  $('campList').addEventListener('change', ev => {
+    if (ev.target.value === ACCOUNT && ev.target.checked) document.querySelectorAll('#campList input').forEach(b => { if (b.value !== ACCOUNT) b.checked = false; });
+    else if (ev.target.checked) { const a = document.querySelector(`#campList input[value="${ACCOUNT}"]`); if (a) a.checked = false; }
+    updateForm();
+  });
+  $('campFilter').addEventListener('input', () => renderCampList());
   $('newBtn').onclick = () => openForm(null);
   $('csvBtn').onclick = exportCsv;
   $('moreBtn').onclick = () => { shown += PAGE; render(); };
   $('closeX').onclick = $('cancelBtn').onclick = () => $('dlg').close();
   $('form').addEventListener('submit', submit);
+  $('cmpWin').addEventListener('change', renderCompare);
+  document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => {
+    document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('on', x === b));
+    ['log', 'audit', 'compare'].forEach(t => $('tab-' + t).classList.toggle('hidden', t !== b.dataset.tab));
+    if (b.dataset.tab !== 'log') loadAudit();
+  });
   document.addEventListener('click', ev => {
     const b = ev.target.closest('button[data-id]');
     if (b) return openForm(all.find(e => e.id === b.dataset.id));
