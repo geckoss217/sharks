@@ -22,7 +22,7 @@
   header .right { display:flex; gap:10px; align-items:center; }
   .badge { background:var(--navy-deep); color:var(--white); font-size:12px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; padding:8px 18px; border-radius:50px; white-space:nowrap; }
   .back { color:var(--navy-deep); font-weight:600; font-size:13px; text-decoration:none; }
-  main { max-width:1200px; margin:0 auto; padding:36px 20px 72px; }
+  main { max-width:1760px; margin:0 auto; padding:36px clamp(16px,3vw,40px) 72px; }
   .eyebrow { color:var(--orange); font-weight:600; font-size:13px; letter-spacing:.12em; text-transform:uppercase; }
   h1 { font-weight:900; font-size:clamp(28px,4vw,42px); line-height:1.15; margin:6px 0 6px; }
   .sub { color:var(--muted); font-size:14px; line-height:1.6; max-width:760px; }
@@ -60,6 +60,26 @@
   td { padding:10px 12px; border-bottom:1px solid var(--line); vertical-align:top; }
   tr:hover td { background:rgba(255,255,255,.025); }
   .rowlink { cursor:pointer; }
+  /* change log table: fits the window, collapses to cards on narrow screens */
+  #logTable { table-layout:fixed; }
+  #logTable th, #logTable td { overflow-wrap:break-word; }
+  #logTable th { white-space:normal; overflow-wrap:normal; letter-spacing:.03em; }
+  #logTable .tag { white-space:normal; max-width:100%; }
+  #logTable td.when { white-space:normal; }
+  #logTable td.chg { max-width:none; }
+  #logTable col.c-id { width:8%; } #logTable col.c-when { width:9%; } #logTable col.c-by { width:7%; }
+  #logTable col.c-camp { width:13%; } #logTable col.c-cat { width:9%; } #logTable col.c-chg { width:19%; }
+  #logTable col.c-why { width:17%; } #logTable col.c-eval { width:10%; } #logTable col.c-st { width:8%; }
+  @media (max-width:1180px) {
+    #logTable, #logTable tbody { display:block; }
+    #logTable thead, #logTable colgroup { display:none; }
+    #logTable tr { display:grid; grid-template-columns:1fr 1fr; gap:6px 14px; padding:14px 16px; border-bottom:1px solid var(--line); }
+    #logTable td { display:block; padding:0; border:0; }
+    #logTable td[data-label]::before { content:attr(data-label); display:block; font-size:10.5px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin-bottom:2px; }
+    #logTable td.wide { grid-column:1 / -1; }
+    #logTable td.empty { grid-column:1 / -1; }
+  }
+  @media (max-width:520px) { #logTable tr { grid-template-columns:1fr; } }
   .mini li.rowlink:hover { outline:1px solid var(--orange); }
   td.when { white-space:nowrap; color:var(--muted); font-size:12px; }
   td.chg { max-width:380px; white-space:pre-line; }
@@ -170,7 +190,8 @@
     </div>
     <div class="meta" id="meta">Loading…</div>
     <div class="tablewrap">
-      <table>
+      <table id="logTable">
+        <colgroup><col class="c-id"><col class="c-when"><col class="c-by"><col class="c-camp"><col class="c-cat"><col class="c-chg"><col class="c-why"><col class="c-eval"><col class="c-st"></colgroup>
         <thead><tr><th>Log ID</th><th>Logged (MT)</th><th>Owner</th><th>Campaigns</th><th>Category</th><th>Previous → New</th><th>Justification · Metric</th><th>Evaluation</th><th>Status</th></tr></thead>
         <tbody id="rows"></tbody>
       </table>
@@ -336,15 +357,15 @@
       const change = e.imported ? e.change : `${e.prev} → ${e.next}`;
       const camps = (e.campaigns || []).join('\n') + (e.adGroup ? `\n${e.adGroup}` : '');
       return `<tr class="rowlink" data-row="${esc(e.id)}" title="Click to ${e.imported ? 'view' : 'edit'}">
-        <td class="when"><b style="color:#fff">${esc(e.logId || '')}</b><div style="margin-top:6px"><button class="btn ghost small" data-id="${esc(e.id)}">${e.imported ? 'View' : 'Edit'}</button></div></td>
-        <td class="when">${esc(fmtWhen(e.ts))}</td>
-        <td>${esc(e.by)}</td>
-        <td class="chg"><div class="clamp">${esc(camps)}</div></td>
-        <td><span class="tag">${esc(e.category)}</span></td>
-        <td class="chg"><div class="clamp">${esc(change)}</div>${change && change.length > 160 ? '<button class="more">more</button>' : ''}</td>
-        <td class="chg"><div class="clamp">${esc(e.why || '')}</div>${e.metric ? `<div class="meta" style="margin:4px 0 0"><b>Metric:</b> ${esc(e.metric)}</div>` : ''}${e.result ? `<div class="meta" style="margin:4px 0 0"><b>Result:</b> ${esc(e.result)}</div>` : ''}</td>
-        <td class="when">${evalCell(e)}</td>
-        <td>${statusTag(e)}</td>
+        <td class="when" data-label="Log ID"><b style="color:#fff">${esc(e.logId || '')}</b><div style="margin-top:6px"><button class="btn ghost small" data-id="${esc(e.id)}">${e.imported ? 'View' : 'Edit'}</button></div></td>
+        <td class="when" data-label="Logged (MT)">${esc(fmtWhen(e.ts))}</td>
+        <td data-label="Owner">${esc(e.by)}</td>
+        <td class="chg" data-label="Campaigns"><div class="clamp">${esc(camps)}</div></td>
+        <td data-label="Category"><span class="tag">${esc(e.category)}</span></td>
+        <td class="chg wide" data-label="Previous → New"><div class="clamp">${esc(change)}</div>${change && change.length > 160 ? '<button class="more">more</button>' : ''}</td>
+        <td class="chg wide" data-label="Justification · Metric"><div class="clamp">${esc(e.why || '')}</div>${e.metric ? `<div class="meta" style="margin:4px 0 0"><b>Metric:</b> ${esc(e.metric)}</div>` : ''}${e.result ? `<div class="meta" style="margin:4px 0 0"><b>Result:</b> ${esc(e.result)}</div>` : ''}</td>
+        <td class="when" data-label="Evaluation">${evalCell(e)}</td>
+        <td data-label="Status">${statusTag(e)}</td>
       </tr>`;
     }).join('') || '<tr><td colspan="9" class="empty">No entries match these filters.</td></tr>';
     $('moreBtn').classList.toggle('hidden', rows.length <= shown);
