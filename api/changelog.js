@@ -6,6 +6,7 @@
 // GET  /api/changelog?view=holds      -> { activeHold, campaigns, holds }   read-only feed for the Weekly Ads Scorecard
 // GET  /api/changelog?view=audit      -> guardrail checks + Google Ads vs WhatConverts comparison
 // POST /api/changelog                 -> create entry      PUT /api/changelog?id=rec... -> update entry
+// DELETE /api/changelog?id=rec...     -> delete a team entry (Airtable keeps it in its trash); imported history can't be deleted
 const zlib = require('zlib');
 
 const BASE = process.env.AIRTABLE_BASE_ID || 'appjTPakoB2CAqC0Y';
@@ -217,7 +218,7 @@ function audit(entries, daily, snaps, today) {
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type,X-Team-Key');
   res.setHeader('X-Robots-Tag', 'noindex');
   if (req.method === 'OPTIONS') return res.status(204).end();
@@ -258,8 +259,14 @@ module.exports = async (req, res) => {
       return res.status(200).json({ asOf: today, dataThrough, entries, campaigns, rules: { HOLD_DAYS, HOLD_CONV, BUDGET_DAYS, BUDGET_PCT, CATEGORIES, HOLD_CATS } });
     }
 
-    if (req.method !== 'POST' && req.method !== 'PUT') return res.status(405).json({ error: 'Method not allowed' });
+    if (!['POST', 'PUT', 'DELETE'].includes(req.method)) return res.status(405).json({ error: 'Method not allowed' });
     if (process.env.CHANGELOG_WRITE_KEY && req.headers['x-team-key'] !== process.env.CHANGELOG_WRITE_KEY) return res.status(401).json({ error: 'Team key required' });
+    if (req.method === 'DELETE') {
+      const gone = entries.find(e => e.id === q.id);
+      if (!gone) return res.status(404).json({ error: 'Entry not found (imported history is read-only)' });
+      await at(`${T.entries}/${gone.id}`, { method: 'DELETE' });
+      return res.status(200).json({ deleted: gone.id, logId: gone.logId });
+    }
     const b = await readBody(req);
     let prev = null;
     if (req.method === 'PUT') {
@@ -286,10 +293,12 @@ module.exports = async (req, res) => {
     let rec = prev
       ? await at(`${T.entries}/${prev.id}?returnFieldsByFieldId=true`, { method: 'PATCH', body: JSON.stringify({ fields: toFields(e), typecast: true, returnFieldsByFieldId: true }) })
       : await at(T.entries, { method: 'POST', body: JSON.stringify({ fields: toFields(e), typecast: true, returnFieldsByFieldId: true }) });
-    if (!prev) { // sequential Log ID per year, ordered by the autonumber
+    if (!prev) { // sequential Log ID per year: highest existing number + 1 (deleted IDs are never reused)
       const year = mtDate(new Date(e.ts)).slice(0, 4), mine = rec.fields[F.seq];
-      const all = (await listAll(T.entries)).map(fromRecord).filter(x => mtDate(new Date(x.ts)).slice(0, 4) === year && x.seq <= mine);
-      const logId = `CL-${year}-${String(all.length).padStart(3, '0')}`;
+      const others = (await listAll(T.entries)).map(fromRecord).filter(x => x.id !== rec.id && (x.seq < mine || x.logId));
+      const nums = others.map(x => (x.logId.match(new RegExp(`^CL-${year}-(\\d+)$`)) || [])[1]).filter(Boolean).map(Number);
+      const earlier = others.filter(x => !x.logId && x.seq < mine && mtDate(new Date(x.ts)).slice(0, 4) === year).length;
+      const logId = `CL-${year}-${String(Math.max(0, ...nums) + 1 + earlier).padStart(3, '0')}`;
       rec = await at(`${T.entries}/${rec.id}`, { method: 'PATCH', body: JSON.stringify({ fields: { [F.logId]: logId }, returnFieldsByFieldId: true }) });
     }
     return res.status(prev ? 200 : 201).json({ entry: decorate(fromRecord(rec), daily, today), overrideReasons: reasons });

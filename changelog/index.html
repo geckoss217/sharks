@@ -233,6 +233,7 @@
       <div class="full" id="impDetail"></div>
     </div>
     <div class="m-foot">
+      <button type="button" class="btn ghost small hidden" id="deleteBtn" style="border-color:var(--red);color:var(--red)">Delete entry</button>
       <span class="err" id="formErr"></span>
       <button type="button" class="btn ghost" id="cancelBtn">Cancel</button>
       <button type="submit" class="btn" id="saveBtn">Save</button>
@@ -451,6 +452,7 @@
     $('iWhy').value = e ? e.why || '' : ''; $('iMetric').value = e ? e.metric || '' : ''; $('iResult').value = e ? e.result || '' : '';
     $('form').querySelectorAll('input:not(#iTs):not(#iHold):not(#iLogId),select,textarea').forEach(el => el.disabled = ro);
     $('saveBtn').classList.toggle('hidden', ro);
+    $('deleteBtn').classList.toggle('hidden', !e || ro);
     $('resultLabel').classList.toggle('hidden', !e || ro);
     $('impDetail').innerHTML = e && !ro && e.conv ? `<div class="meta">Since ${esc(fmtDay(e.conv.since))} (${esc(e.conv.basis)}): Google Ads ${e.conv.google} conversions · WhatConverts ${e.conv.wcLeads} leads, ${e.conv.wcQuotable} quotable${e.override ? ` · <b style="color:var(--red)">Override:</b> ${esc(e.overrideOf)}` : ''}</div>` : '';
     updateForm();
@@ -483,6 +485,20 @@
       if (i >= 0) team[i] = out.entry; else team.unshift(out.entry);
       merge(); buildLists(); render(); $('dlg').close();
     } catch (err) { $('formErr').textContent = err.message; } finally { $('saveBtn').disabled = false; }
+  }
+  async function removeEntry() {
+    if (!editing || editing.imported) return;
+    if (!confirm(`Delete ${editing.logId || 'this entry'}? It disappears from the log for everyone. Its Log ID is not reused.`)) return;
+    $('deleteBtn').disabled = true; $('formErr').textContent = '';
+    try {
+      const del = () => fetch(`${API}?id=${encodeURIComponent(editing.id)}`, { method: 'DELETE', headers: { 'X-Team-Key': teamKey() } });
+      let r = await del();
+      if (r.status === 401) { const k = prompt('Enter the team key to delete entries:'); if (k) { try { localStorage.setItem('ecChangelogKey', k); } catch {} r = await del(); } }
+      const out = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(out.error || `Delete failed (${r.status})`);
+      team = team.filter(x => x.id !== editing.id);
+      merge(); buildLists(); render(); $('dlg').close();
+    } catch (err) { $('formErr').textContent = err.message; } finally { $('deleteBtn').disabled = false; }
   }
   function send(body) {
     const url = editing ? `${API}?id=${encodeURIComponent(editing.id)}` : API;
@@ -521,6 +537,7 @@
   $('moreBtn').onclick = () => { shown += PAGE; render(); };
   $('closeX').onclick = $('cancelBtn').onclick = () => $('dlg').close();
   $('form').addEventListener('submit', submit);
+  $('deleteBtn').onclick = removeEntry;
   $('cmpWin').addEventListener('change', renderCompare);
   document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => {
     document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('on', x === b));
