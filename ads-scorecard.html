@@ -92,6 +92,39 @@
   .notes { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
   .notes li { margin: 4px 0 4px 18px; }
   .empty { display: none; margin-top: 30px; color: var(--muted); }
+
+  /* ── Funnel ── */
+  .seg { display: inline-flex; border: 1px solid var(--line-strong); border-radius: 999px; overflow: hidden; }
+  .seg button { background: transparent; color: var(--muted); border-radius: 0; padding: 7px 14px; font-size: 12.5px; }
+  .seg button.on { background: var(--teal); color: var(--white); }
+  .fctl { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; margin: 4px 0 14px; }
+  .fctl .lbl { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+  .story { background: var(--navy-card); border: 1px solid var(--line); border-left: 3px solid var(--teal); border-radius: 12px;
+           padding: 14px 16px; font-size: 14px; margin-bottom: 14px; }
+  .story b { font-weight: 700; }
+  .story .s-sub { color: var(--muted); font-size: 12.5px; margin-top: 4px; }
+  .funnel { display: grid; grid-template-columns: minmax(0,1fr) repeat(5, 64px minmax(0,1fr)); align-items: stretch; }
+  .fstage { background: var(--navy-card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 14px 12px; min-width: 0; }
+  .fstage .f-step { font-size: 10.5px; font-weight: 700; color: var(--teal); letter-spacing: .08em; text-transform: uppercase; }
+  .fstage .f-label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+  .fstage .f-val { font-size: 24px; font-weight: 800; margin: 2px 0 2px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .fstage .f-vs { font-size: 12px; margin-bottom: 8px; }
+  .fstage .f-k { font-size: 11px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 7px; }
+  .fstage .f-c { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .fstage .f-c .chg { font-size: 11.5px; margin-left: 4px; }
+  .fstage .f-note { font-size: 11px; color: var(--muted); margin-top: 6px; line-height: 1.35; }
+  .fchip { align-self: center; justify-self: center; text-align: center; font-size: 11px; line-height: 1.3; width: 58px; position: relative; }
+  .fchip .n { color: var(--muted); font-size: 9.5px; text-transform: uppercase; letter-spacing: .04em; }
+  .fchip .r { font-size: 15px; font-weight: 800; color: var(--white); font-variant-numeric: tabular-nums; }
+  .fchip .chg { font-size: 10.5px; display: block; }
+  .fchip.hot .r { color: var(--orange); }
+  .fstage.hot { border-color: var(--orange); box-shadow: 0 0 0 1px var(--orange) inset; }
+  @media (max-width: 1000px) {
+    .funnel { grid-template-columns: 1fr; row-gap: 6px; }
+    .fchip { width: auto; display: flex; gap: 8px; align-items: baseline; padding: 2px 0; }
+    .fchip .chg { display: inline; }
+  }
+  #fcharts { margin-top: 14px; }
   @media (max-width: 600px) {
     header { padding: 12px 16px; } main { padding: 24px 16px 70px; }
     .charts { grid-template-columns: 1fr; } .badge { display: none; }
@@ -106,7 +139,7 @@
 <main>
   <div class="eyebrow">Paid Search</div>
   <h1>Weekly Ads Scorecard</h1>
-  <p class="sub">Seven numbers, one row per week (Monday–Sunday, Mountain Time). Each week is compared with the prior 4-week average and the same week last year. Green means the number moved the right way.</p>
+  <p class="sub">How ad dollars turn into impressions, clicks, leads and booked jobs, plus the weekly scorecard. Weeks run Monday–Sunday, Mountain Time. Green means the number moved the right way.</p>
 
   <div class="controls">
     <div class="ctl"><label for="wk">Week</label><select id="wk"></select></div>
@@ -119,7 +152,25 @@
   <div class="warn" id="warn"></div>
   <div class="empty" id="empty">Scorecard data hasn't loaded. It refreshes every Monday at 6:00 AM MT.</div>
 
-  <div class="tiles" id="tiles"></div>
+  <section class="sect" id="funnel-sect" style="margin-top:34px">
+    <h2>Ad funnel: spend to booked jobs</h2>
+    <p class="p-sub">Every step from ad dollars to booked jobs, counting only leads and jobs WhatConverts attributes to paid search (google / bing cpc). The chips between steps are the conversion rate at that step.</p>
+    <div class="fctl">
+      <span class="lbl">Platform</span>
+      <div class="seg" id="f-plat"><button data-v="all" class="on">Google + Microsoft</button><button data-v="g">Google</button><button data-v="ms">Microsoft</button></div>
+      <span class="lbl">Period ending selected week</span>
+      <div class="seg" id="f-per"><button data-v="1">1 week</button><button data-v="4" class="on">4 weeks</button><button data-v="13">13 weeks</button></div>
+      <span class="lbl">Compare to</span>
+      <div class="seg" id="f-cmp"><button data-v="prior" class="on">Prior period</button><button data-v="ly">Last year</button></div>
+    </div>
+    <div class="story" id="f-story"></div>
+    <div class="funnel" id="funnel"></div>
+    <div class="charts" id="fcharts"></div>
+  </section>
+
+  <section class="sect"><h2>Weekly scorecard</h2>
+    <p class="p-sub">The original seven numbers for the selected week. Quotable leads, jobs and revenue here count all sources, not only ads.</p></section>
+  <div class="tiles" id="tiles" style="margin-top:0"></div>
 
   <section class="sect">
     <h2>13-week trends</h2>
@@ -145,7 +196,10 @@
     <li>Google Ads spend runs from the week of Dec 30, 2024. WhatConverts has no leads before Apr 1, 2025 and no transactions before Sept 25, 2025, so year-over-year jobs and revenue are blank until late Sept 2026.</li>
     <li>Most Apr–Aug 2025 leads have no sales stage (“TBD”), so 2025 wrong-number % and low-budget % aren't comparable. Those weeks are shown greyed and aren't used for year-over-year.</li>
     <li>The WhatConverts API sometimes returns a transient 503. The refresh retries up to 3 times and never writes a week that returned an error.</li>
-    <li>The budget is saved in this browser only.</li>
+    <li>Ad funnel: impressions and clicks come from Google Ads and the Microsoft Ads tab. Ad leads, quotable and booked jobs are WhatConverts records with source google/cpc or bing/cpc; transaction and appointment rows are not counted as leads. Booked jobs are WhatConverts Transactions (cancelled excluded), counted in the week the job was booked, so a job can land a week or more after its lead.</li>
+    <li>Microsoft impressions aren't in the Microsoft Ads tab yet (it has Date, Cost, Clicks). Once an Impressions column is added there, the weekly refresh picks it up automatically. Until then, combined CTR and CPM use Google only.</li>
+    <li>Scorecard jobs and revenue count all sources, so they're higher than funnel booked jobs.</li>
+    <li>The budget and funnel view choices are saved in this browser only.</li>
   </ul>
 </main>
 <div id="tip"></div>
@@ -173,6 +227,7 @@ let ROWS = [], SEL = null, CUR = 'spend';
 
 function fmt(v, f, short) {
   if (v === null || v === undefined || isNaN(v)) return '—';
+  if (f === '$2') return '$' + v.toFixed(2);
   if (f === '$') return '$' + (short && Math.abs(v) >= 1000 ? (v/1000).toFixed(v>=10000?0:1)+'k' : Math.round(v).toLocaleString());
   if (f === '%') return (v*100).toFixed(1) + '%';
   return (Math.round(v*10)/10).toLocaleString();
@@ -236,6 +291,7 @@ function budgetJudge(v) {
 function render() {
   const idx = ROWS.findIndex(r => r.week === SEL);
   const r = ROWS[idx];
+  renderFunnel(idx);
   let html = '';
   for (const m of METRICS) {
     const c = compare(m, idx);
@@ -267,13 +323,163 @@ function render() {
   stackChart($('p-quot'), win, r => r.q_google, r => r.q_bing, 'n');
 
   const last = ROWS.slice(0, idx+1).reverse();
-  $('tbl').innerHTML = `<thead><tr><th>Week of</th><th>Spend</th><th>Google</th><th>Microsoft</th><th>Quotable</th><th>G quot.</th><th>MS quot.</th><th>Cost / quot.</th><th>Jobs</th><th>Revenue</th><th>Wrong #</th><th>Low budget</th><th>Leads</th></tr></thead><tbody>` +
+  $('tbl').innerHTML = `<thead><tr><th>Week of</th><th>Spend</th><th>Google</th><th>Microsoft</th><th>Impr. (G)</th><th>Clicks</th><th>Ad leads</th><th>Quotable</th><th>G quot.</th><th>MS quot.</th><th>Cost / quot.</th><th>Jobs</th><th>Revenue</th><th>Ad jobs</th><th>Ad rev.</th><th>Wrong #</th><th>Low budget</th><th>Leads</th></tr></thead><tbody>` +
     last.map(r => { const v = k => METRICS.find(m=>m.key===k).get(r);
-      return `<tr><td>${wkLabel(r.week)}</td><td>${fmt(v('spend'),'$')}</td><td>${fmt(r.g_spend,'$')}</td><td>${fmt(r.ms_spend,'$')}</td>
+      return `<tr><td>${wkLabel(r.week)}</td><td>${fmt(v('spend'),'$')}</td><td>${fmt(r.g_spend,'$')}</td><td>${fmt(r.ms_spend,'$')}</td><td>${fmt(r.g_impr,'n')}</td><td>${fmt(r.g_clicks+r.ms_clicks,'n')}</td><td class="${r.gl!=null?'':'na'}">${r.gl!=null?fmt(r.gl+r.bl,'n'):'—'}</td>
       <td class="${r.wcOk?'':'na'}">${r.wcOk?r.quotable:'—'}</td><td class="${r.wcOk?'':'na'}">${r.wcOk?r.q_google:'—'}</td><td class="${r.wcOk?'':'na'}">${r.wcOk?r.q_bing:'—'}</td><td>${fmt(v('cpql'),'$')}</td>
-      <td class="${r.txOk?'':'na'}">${fmt(v('jobs'),'n')}</td><td class="${r.txOk?'':'na'}">${fmt(v('rev'),'$')}</td>
+      <td class="${r.txOk?'':'na'}">${fmt(v('jobs'),'n')}</td><td class="${r.txOk?'':'na'}">${fmt(v('rev'),'$')}</td><td class="${r.txOk&&r.gj!=null?'':'na'}">${r.txOk&&r.gj!=null?r.gj+r.bj:'—'}</td><td class="${r.txOk&&r.gj!=null?'':'na'}">${r.txOk&&r.grev!=null?fmt(r.grev+r.brev,'$'):'—'}</td>
       <td class="${r.stageOk?'':'na'}">${fmt(v('wrong'),'%')}</td><td class="${r.stageOk?'':'na'}">${fmt(v('lowb'),'%')}</td><td class="${r.wcOk?'':'na'}">${r.wcOk?r.leads:'—'}</td></tr>`; }).join('') + '</tbody>';
 }
+
+
+/* ── Funnel ─────────────────────────────────────────────── */
+let FPLAT = 'all', FPER = 4, FCMP = 'prior';
+const n0 = v => (v === null || v === undefined) ? null : v;
+function sumW(win, f) { let t = 0; for (const r of win) { const v = f(r); if (v === null || v === undefined) return null; t += v; } return t; }
+// per-row accessors for the selected platform
+function fx(r) {
+  const G = FPLAT !== 'ms', M = FPLAT !== 'g';
+  const msImprKnown = r.ms_impr !== null && r.ms_impr !== undefined;
+  const add = (a, b) => (a === null || b === null) ? null : a + b;
+  const pick = (g, m) => G && M ? add(g, m) : G ? g : m;
+  const wc = r.wcOk && r.gl !== null && r.gl !== undefined;
+  // impressions: Microsoft impressions aren't tracked yet; if Microsoft had no spend its impressions are 0
+  const msImpr = msImprKnown ? r.ms_impr : (r.ms_spend ? null : 0);
+  return {
+    spend: pick(r.g_spend, r.ms_spend),
+    impr: pick(n0(r.g_impr), msImpr),
+    clicks: pick(r.g_clicks, r.ms_clicks),
+    // clicks that have matching impressions (for CTR / CPM when Microsoft impressions are missing)
+    ctrClicks: pick(r.g_clicks, msImprKnown || !r.ms_spend ? r.ms_clicks : null),
+    ctrImpr: pick(n0(r.g_impr), msImprKnown ? r.ms_impr : (r.ms_spend ? null : 0)),
+    leads: wc ? pick(r.gl, r.bl) : null,
+    quot: wc ? pick(r.gq, r.bq) : null,
+    jobs: wc && r.txOk ? pick(r.gj, r.bj) : null,
+    rev: wc && r.txOk ? pick(r.grev, r.brev) : null,
+  };
+}
+function aggWin(win) {
+  if (!win.length) return null;
+  const xs = win.map(fx), k = key => sumW(xs, x => x[key]);
+  const a = { spend: k('spend'), impr: k('impr'), clicks: k('clicks'), leads: k('leads'), quot: k('quot'), jobs: k('jobs'), rev: k('rev') };
+  // Google-only fallback for impressions when Microsoft impressions are missing
+  if (a.impr === null && FPLAT === 'all') { a.imprG = sumW(win, r => n0(r.g_impr)); a.clicksG = sumW(win, r => r.g_clicks); a.spendG = sumW(win, r => r.g_spend); }
+  const div = (x, y) => (x === null || y === null || !y) ? null : x / y;
+  a.ctr = a.impr !== null ? div(a.clicks, a.impr) : div(a.clicksG, a.imprG);
+  a.cpm = a.impr !== null ? div(a.spend, a.impr / 1000) : div(a.spendG, (a.imprG ?? 0) / 1000);
+  a.cpc = div(a.spend, a.clicks); a.c2l = div(a.leads, a.clicks); a.cpl = div(a.spend, a.leads);
+  a.l2q = div(a.quot, a.leads); a.cpq = div(a.spend, a.quot); a.q2j = div(a.jobs, a.quot); a.cpj = div(a.spend, a.jobs);
+  a.roas = div(a.rev, a.spend);
+  a.imprPartial = a.impr === null && a.imprG !== null && a.imprG !== undefined;
+  return a;
+}
+function fWindows(idx) {
+  const cur = ROWS.slice(Math.max(0, idx - FPER + 1), idx + 1);
+  if (cur.length < FPER) return { cur, ref: [] };
+  let ref;
+  if (FCMP === 'prior') { const st = idx - 2 * FPER + 1; ref = st >= 0 ? ROWS.slice(st, idx - FPER + 1) : []; }
+  else { const lyEnd = ROWS.findIndex(r => r.week === addDays(ROWS[idx].week, -364)); ref = lyEnd - FPER + 1 >= 0 ? ROWS.slice(lyEnd - FPER + 1, lyEnd + 1) : []; }
+  return { cur, ref };
+}
+function chgHtml(v, ref, dir, pct) {
+  if (v === null || v === undefined || ref === null || ref === undefined) return '<b>—</b>';
+  const d = pct ? v - ref : (ref ? (v - ref) / Math.abs(ref) : null);
+  if (d === null) return '<b>—</b>';
+  let cls = 'flat'; if (dir && Math.abs(d) > 1e-9) cls = (d > 0) === (dir > 0) ? 'good' : 'bad';
+  const arrow = d > 0 ? '▲' : d < 0 ? '▼' : '•';
+  const txt = pct ? (d >= 0 ? '+' : '') + (d * 100).toFixed(1) + ' pts' : (d >= 0 ? '+' : '') + Math.round(d * 100) + '%';
+  return `<span class="chg ${cls}">${arrow} ${txt}</span>`;
+}
+const STEPS = [
+  { k: 'spend',  label: 'Ad spend',     f: '$', dir: 0,  cost: a => ['ROAS', a.roas === null ? '—' : a.roas.toFixed(2) + 'x'] },
+  { k: 'impr',   label: 'Impressions',  f: 'n', dir: 1,  cost: a => ['CPM', fmt(a.cpm, a.cpm >= 100 ? '$' : '$2')], rate: 'ctr', rateName: 'CTR' },
+  { k: 'clicks', label: 'Clicks',       f: 'n', dir: 1,  cost: a => ['Cost / click', fmt(a.cpc, '$2')], rate: 'c2l', rateName: 'Click → lead' },
+  { k: 'leads',  label: 'Ad leads',     f: 'n', dir: 1,  cost: a => ['Cost / lead', fmt(a.cpl, '$')], rate: 'l2q', rateName: 'Quotable' },
+  { k: 'quot',   label: 'Quotable',     f: 'n', dir: 1,  cost: a => ['Cost / quotable', fmt(a.cpq, '$')], rate: 'q2j', rateName: 'Booked' },
+  { k: 'jobs',   label: 'Booked jobs',  f: 'n', dir: 1,  cost: a => ['Cost / job', fmt(a.cpj, '$')] },
+];
+// rate chip that sits in front of each stage (rate from the previous stage)
+const COST_KEY = { spend: 'roas', impr: 'cpm', clicks: 'cpc', leads: 'cpl', quot: 'cpq', jobs: 'cpj' };
+const CHIP_BEFORE = { clicks: ['ctr', 'CTR'], leads: ['c2l', 'Lead rate'], quot: ['l2q', 'Quotable'], jobs: ['q2j', 'Booked'] };
+const RATE_NAMES = { ctr: 'click-through rate (impressions → clicks)', c2l: 'click → lead rate', l2q: 'lead → quotable rate', q2j: 'quotable → booked rate' };
+function renderFunnel(idx) {
+  const { cur, ref } = fWindows(idx);
+  const a = aggWin(cur), b = ref.length ? aggWin(ref) : null;
+  const perTxt = FPER === 1 ? 'week of ' + wkLabel(cur[cur.length - 1].week) : `${FPER} weeks, ${wkShort(cur[0].week)} – ${wkShort(addDays(cur[cur.length - 1].week, 6))}`;
+  const cmpTxt = FCMP === 'prior' ? `prior ${FPER === 1 ? 'week' : FPER + ' weeks'}` : 'same period last year';
+  // biggest rate mover = the step to look at
+  let hot = null, best = 0;
+  if (b) for (const rk of ['ctr', 'c2l', 'l2q', 'q2j']) {
+    if (a[rk] === null || b[rk] === null || !b[rk]) continue;
+    const rel = (a[rk] - b[rk]) / b[rk];
+    if (Math.abs(rel) > Math.abs(best)) { best = rel; hot = rk; }
+  }
+  let html = '';
+  const vsTxt = FCMP === 'prior' ? 'vs prior' : 'vs last yr';
+  STEPS.forEach((st, i) => {
+    let v = a[st.k], note = '';
+    if (st.k === 'impr' && a.imprPartial) { v = a.imprG; note = 'Google only. Microsoft impressions aren’t tracked yet.'; }
+    if (st.k === 'impr' && FPLAT === 'ms' && v === null) note = 'Microsoft impressions aren’t tracked yet.';
+    if (st.k === 'jobs' && v === null) note = 'Transactions start Sept 25, 2025.';
+    const rv = b ? (st.k === 'impr' && a.imprPartial ? b.imprG : b[st.k]) : null;
+    const [cl, cv] = st.cost(a);
+    const ck = COST_KEY[st.k];
+    const chip = CHIP_BEFORE[st.k];
+    if (i > 0) html += chip
+      ? `<div class="fchip ${hot === chip[0] ? 'hot' : ''}" title="${RATE_NAMES[chip[0]]}"><div class="n">${chip[1]}</div><div class="r">${fmt(a[chip[0]], '%')}</div>${b ? chgHtml(a[chip[0]], b[chip[0]], 1, true) : ''}</div>`
+      : `<div class="fchip" title="Spend buys impressions"><div class="n">buys</div><div class="r">→</div></div>`;
+    html += `<div class="fstage ${chip && hot === chip[0] ? 'hot' : ''}">
+      <div class="f-step">Step ${i + 1}</div><div class="f-label">${st.label}</div>
+      <div class="f-val">${fmt(v, st.f)}${st.k === 'jobs' && a.rev !== null ? ' <span style="font-size:14px;color:var(--muted);font-weight:600">· ' + fmt(a.rev, '$', true) + '</span>' : ''}</div>
+      <div class="f-vs">${b ? chgHtml(v, rv, st.dir, false) + ` <span style="color:var(--muted)">${vsTxt}</span>` : '<span style="color:var(--muted)">no comparison</span>'}</div>
+      <div class="f-k">${cl}</div><div class="f-c">${cv}${b && ck ? chgHtml(a[ck], b[ck], ck === 'roas' ? 1 : -1, false) : ''}</div>
+      ${note ? `<div class="f-note">${note}</div>` : ''}</div>`;
+  });
+  $('funnel').innerHTML = html;
+
+  // story
+  const platTxt = FPLAT === 'all' ? 'Google + Microsoft' : FPLAT === 'g' ? 'Google' : 'Microsoft';
+  let story = `<b>${platTxt}, ${perTxt}:</b> ${fmt(a.spend, '$')} bought ${fmt(a.imprPartial ? a.imprG : a.impr, 'n')} impressions${a.imprPartial ? ' (Google)' : ''}, ${fmt(a.clicks, 'n')} clicks, ${fmt(a.leads, 'n')} ad leads, ${fmt(a.quot, 'n')} quotable and ${fmt(a.jobs, 'n')} booked jobs${a.rev !== null ? ' worth ' + fmt(a.rev, '$') : ''}.`;
+  if (a.cpj !== null) story += ` That's ${fmt(a.cpj, '$')} of ad spend per booked job.`;
+  let sub = '';
+  if (!b) sub = `No ${cmpTxt} to compare with yet.`;
+  else if (hot) {
+    const up = best > 0;
+    sub = `Biggest change vs the ${cmpTxt}: the ${RATE_NAMES[hot]} went from ${fmt(b[hot], '%')} to ${fmt(a[hot], '%')} (${up ? 'up' : 'down'} ${Math.abs(Math.round(best * 100))}%). It's outlined in orange above.`;
+    const sp = b.spend ? (a.spend - b.spend) / b.spend : null;
+    if (sp !== null) sub += ` Spend moved ${sp >= 0 ? '+' : ''}${Math.round(sp * 100)}% and booked jobs went from ${fmt(b.jobs, 'n')} to ${fmt(a.jobs, 'n')}.`;
+  }
+  $('f-story').innerHTML = story + (sub ? `<div class="s-sub">${sub}</div>` : '');
+
+  // 13-week weekly trends for the funnel (selected platform)
+  const win = ROWS.slice(Math.max(0, idx - 12), idx + 1);
+  const wk = r => { const x = fx(r), d = (p, q) => (p === null || q === null || !q) ? null : p / q;
+    return { ...x, ctr: d(x.ctrClicks, x.ctrImpr), c2l: d(x.leads, x.clicks), l2q: d(x.quot, x.leads), q2j: d(x.jobs, x.quot), cpj: d(x.spend, x.jobs) }; };
+  const FM = [
+    { key: 'f_impr', label: 'Impressions' + (FPLAT === 'all' ? ' (Google; Microsoft not tracked)' : ''), fmt: 'n', get: r => FPLAT === 'all' ? (r.g_impr === null || r.g_impr === undefined ? null : r.g_impr + (n0(r.ms_impr) ?? 0)) : wk(r).impr },
+    { key: 'f_ctr',  label: FPLAT === 'ms' ? 'CTR (Microsoft not tracked)' : 'CTR (Google impressions → clicks)', fmt: '%', get: r => FPLAT === 'ms' ? wk(r).ctr : (r.g_impr ? r.g_clicks / r.g_impr : null) },
+    { key: 'f_c2l',  label: 'Click → lead rate', fmt: '%', get: r => wk(r).c2l },
+    { key: 'f_l2q',  label: 'Lead → quotable rate', fmt: '%', get: r => wk(r).l2q },
+    { key: 'f_q2j',  label: 'Quotable → booked rate', fmt: '%', get: r => wk(r).q2j },
+    { key: 'f_cpj',  label: 'Ad spend per booked job', fmt: '$', get: r => wk(r).cpj },
+  ];
+  $('fcharts').innerHTML = FM.map(m => `<div class="panel chart"><h3>${m.label}</h3>
+    <div class="c-sub">Weekly, ${wkShort(win[0].week)} – ${wkShort(win[win.length - 1].week)}</div>
+    <svg data-k="${m.key}" role="img" aria-label="${m.label}, last 13 weeks"></svg></div>`).join('');
+  FM.forEach(m => lineChart(document.querySelector(`svg[data-k="${m.key}"]`), win, m));
+}
+function segInit(id, set) {
+  document.querySelectorAll(`#${id} button`).forEach(b => b.onclick = () => {
+    document.querySelectorAll(`#${id} button`).forEach(x => x.classList.toggle('on', x === b));
+    set(b.dataset.v); try { localStorage.setItem('ads_' + id, b.dataset.v); } catch (e) {}
+    if (ROWS.length) renderFunnel(ROWS.findIndex(r => r.week === SEL));
+  });
+  let v = null; try { v = localStorage.getItem('ads_' + id); } catch (e) {}
+  if (v) { const b = document.querySelector(`#${id} button[data-v="${v}"]`); if (b) { document.querySelectorAll(`#${id} button`).forEach(x => x.classList.toggle('on', x === b)); set(v); } }
+}
+segInit('f-plat', v => FPLAT = v);
+segInit('f-per', v => FPER = +v);
+segInit('f-cmp', v => FCMP = v);
 
 /* ── Charts (inline SVG, single axis) ───────────────────── */
 function scaleFor(vals, f) {
