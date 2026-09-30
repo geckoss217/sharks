@@ -81,9 +81,28 @@
   #tip .tt { color: var(--muted); font-size: 11px; }
   #tip .tr { display: flex; justify-content: space-between; gap: 12px; }
 
-  .tblwrap { overflow-x: auto; }
+  .tblwrap { overflow-x: auto; padding: 6px 8px; }
+  body { overflow-x: hidden; }
+  .tblsect { width: min(1800px, calc(100vw - 64px)); position: relative; left: 50%; transform: translateX(-50%); }
+  .tblbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .tblbar .hint { color: var(--muted); font-size: 12px; }
+  #tbl th { cursor: grab; user-select: none; white-space: normal; line-height: 1.25; vertical-align: bottom; min-width: 56px; }
+  #tbl th:first-child, #tbl td:first-child { position: sticky; left: 0; background: var(--navy-card); z-index: 1; }
+  #tbl th.dragging { opacity: .4; }
+  #tbl th.drop-l { box-shadow: inset 3px 0 0 var(--orange); }
+  #tbl th.drop-r { box-shadow: inset -3px 0 0 var(--orange); }
+  #tbl th .grip { color: var(--line-strong); margin-right: 3px; font-size: 10px; }
+  #colpanel { display: none; margin-bottom: 12px; padding: 12px; }
+  #colpanel.open { display: block; }
+  #colpanel ul { list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 6px 14px; }
+  #colpanel li { display: flex; align-items: center; gap: 8px; font-size: 13px; background: var(--navy); border: 1px solid var(--line); border-radius: 8px; padding: 5px 8px; }
+  #colpanel li span { flex: 1; }
+  #colpanel input[type=checkbox] { min-width: 0; width: 16px; height: 16px; accent-color: var(--teal); }
+  #colpanel .mv { background: transparent; border: 1px solid var(--line-strong); color: var(--muted); padding: 1px 8px; border-radius: 6px; font-size: 12px; }
+  @media (max-width: 1500px) { #tbl { font-size: 12px; } #tbl th, #tbl td { padding: 6px 5px; } #tbl th { font-size: 10px; letter-spacing: .03em; min-width: 40px; } }
+  @media (max-width: 600px) { .tblsect { width: calc(100vw - 32px); } }
   table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
-  th, td { padding: 8px 10px; text-align: right; white-space: nowrap; }
+  th, td { padding: 7px 8px; text-align: right; white-space: nowrap; }
   th:first-child, td:first-child { text-align: left; }
   thead th { color: var(--muted); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; border-bottom: 1px solid var(--line-strong); }
   tbody tr { border-bottom: 1px solid var(--line); }
@@ -184,9 +203,12 @@
     <div class="charts" id="platform"></div>
   </section>
 
-  <section class="sect">
+  <section class="sect tblsect">
     <h2>All weeks since Jan 2025</h2>
     <p class="p-sub">Newest first, through the selected week. Greyed cells: no data for that source yet.</p>
+    <div class="tblbar"><span class="hint">Drag a column header to move it. Use Columns to reorder or hide columns. Your layout is saved in this browser.</span>
+      <span><button class="ghost" id="colbtn">Columns</button> <button class="ghost" id="colreset">Reset layout</button></span></div>
+    <div class="panel" id="colpanel"><ul id="collist"></ul></div>
     <div class="panel tblwrap"><table id="tbl"></table></div>
   </section>
 
@@ -199,7 +221,7 @@
     <li>Ad funnel: impressions and clicks come from Google Ads and the Microsoft Ads tab. Ad leads, quotable and booked jobs are WhatConverts records with source google/cpc or bing/cpc; transaction and appointment rows are not counted as leads. Booked jobs are WhatConverts Transactions (cancelled excluded), counted in the week the job was booked, so a job can land a week or more after its lead.</li>
     <li>Microsoft impressions aren't in the Microsoft Ads tab yet (it has Date, Cost, Clicks). Once an Impressions column is added there, the weekly refresh picks it up automatically. Until then, combined CTR and CPM use Google only.</li>
     <li>Scorecard jobs and revenue count all sources, so they're higher than funnel booked jobs.</li>
-    <li>The budget and funnel view choices are saved in this browser only.</li>
+    <li>The budget, funnel view choices and table column layout are saved in this browser only.</li>
   </ul>
 </main>
 <div id="tip"></div>
@@ -322,13 +344,7 @@ function render() {
   stackChart($('p-spend'), win, r => r.g_spend, r => r.ms_spend, '$');
   stackChart($('p-quot'), win, r => r.q_google, r => r.q_bing, 'n');
 
-  const last = ROWS.slice(0, idx+1).reverse();
-  $('tbl').innerHTML = `<thead><tr><th>Week of</th><th>Spend</th><th>Google</th><th>Microsoft</th><th>Impr. (G)</th><th>Clicks</th><th>Ad leads</th><th>Quotable</th><th>G quot.</th><th>MS quot.</th><th>Cost / quot.</th><th>Jobs</th><th>Revenue</th><th>Ad jobs</th><th>Ad rev.</th><th>Wrong #</th><th>Low budget</th><th>Leads</th></tr></thead><tbody>` +
-    last.map(r => { const v = k => METRICS.find(m=>m.key===k).get(r);
-      return `<tr><td>${wkLabel(r.week)}</td><td>${fmt(v('spend'),'$')}</td><td>${fmt(r.g_spend,'$')}</td><td>${fmt(r.ms_spend,'$')}</td><td>${fmt(r.g_impr,'n')}</td><td>${fmt(r.g_clicks+r.ms_clicks,'n')}</td><td class="${r.gl!=null?'':'na'}">${r.gl!=null?fmt(r.gl+r.bl,'n'):'—'}</td>
-      <td class="${r.wcOk?'':'na'}">${r.wcOk?r.quotable:'—'}</td><td class="${r.wcOk?'':'na'}">${r.wcOk?r.q_google:'—'}</td><td class="${r.wcOk?'':'na'}">${r.wcOk?r.q_bing:'—'}</td><td>${fmt(v('cpql'),'$')}</td>
-      <td class="${r.txOk?'':'na'}">${fmt(v('jobs'),'n')}</td><td class="${r.txOk?'':'na'}">${fmt(v('rev'),'$')}</td><td class="${r.txOk&&r.gj!=null?'':'na'}">${r.txOk&&r.gj!=null?r.gj+r.bj:'—'}</td><td class="${r.txOk&&r.gj!=null?'':'na'}">${r.txOk&&r.grev!=null?fmt(r.grev+r.brev,'$'):'—'}</td>
-      <td class="${r.stageOk?'':'na'}">${fmt(v('wrong'),'%')}</td><td class="${r.stageOk?'':'na'}">${fmt(v('lowb'),'%')}</td><td class="${r.wcOk?'':'na'}">${r.wcOk?r.leads:'—'}</td></tr>`; }).join('') + '</tbody>';
+  renderTable(idx);
 }
 
 
@@ -480,6 +496,82 @@ function segInit(id, set) {
 segInit('f-plat', v => FPLAT = v);
 segInit('f-per', v => FPER = +v);
 segInit('f-cmp', v => FCMP = v);
+
+
+/* ── All-weeks table (reorderable columns) ──────────────── */
+const na = (ok, html) => ({ ok, html });
+const TCOLS = [
+  { k: 'week',  l: 'Week of',      c: r => na(true, wkLabel(r.week)) },
+  { k: 'spend', l: 'Spend',        c: r => na(true, fmt(r.g_spend + r.ms_spend, '$')) },
+  { k: 'gsp',   l: 'Google',       c: r => na(true, fmt(r.g_spend, '$')) },
+  { k: 'msp',   l: 'Microsoft',    c: r => na(true, fmt(r.ms_spend, '$')) },
+  { k: 'impr',  l: 'Impr. (G)',    c: r => na(r.g_impr != null, fmt(r.g_impr, 'n')) },
+  { k: 'clk',   l: 'Clicks',       c: r => na(true, fmt(r.g_clicks + r.ms_clicks, 'n')) },
+  { k: 'ctr',   l: 'CTR (G)',      c: r => na(!!r.g_impr, r.g_impr ? fmt(r.g_clicks / r.g_impr, '%') : '—') },
+  { k: 'cpc',   l: 'Cost / click', c: r => { const k = r.g_clicks + r.ms_clicks; return na(!!k, k ? fmt((r.g_spend + r.ms_spend) / k, '$2') : '—'); } },
+  { k: 'adl',   l: 'Ad leads',     c: r => na(r.gl != null, r.gl != null ? fmt(r.gl + r.bl, 'n') : '—') },
+  { k: 'quot',  l: 'Quotable',     c: r => na(r.wcOk, r.wcOk ? fmt(r.quotable, 'n') : '—') },
+  { k: 'gq',    l: 'G quot.',      c: r => na(r.wcOk, r.wcOk ? fmt(r.q_google, 'n') : '—') },
+  { k: 'mq',    l: 'MS quot.',     c: r => na(r.wcOk, r.wcOk ? fmt(r.q_bing, 'n') : '—') },
+  { k: 'cpq',   l: 'Cost / quot.', c: r => na(r.wcOk, fmt(METRICS[2].get(r), '$')) },
+  { k: 'jobs',  l: 'Jobs',         c: r => na(r.txOk, fmt(METRICS[3].get(r), 'n')) },
+  { k: 'rev',   l: 'Revenue',      c: r => na(r.txOk, fmt(METRICS[4].get(r), '$')) },
+  { k: 'adj',   l: 'Ad jobs',      c: r => na(r.txOk && r.gj != null, r.txOk && r.gj != null ? fmt(r.gj + r.bj, 'n') : '—') },
+  { k: 'adr',   l: 'Ad rev.',      c: r => na(r.txOk && r.grev != null, r.txOk && r.grev != null ? fmt(r.grev + r.brev, '$') : '—') },
+  { k: 'cpj',   l: 'Cost / ad job',c: r => { const j = r.txOk && r.gj != null ? r.gj + r.bj : null; return na(!!j, j ? fmt((r.g_spend + r.ms_spend) / j, '$') : '—'); } },
+  { k: 'wrong', l: 'Wrong #',      c: r => na(r.stageOk, fmt(METRICS[5].get(r), '%')) },
+  { k: 'lowb',  l: 'Low budget',   c: r => na(r.stageOk, fmt(METRICS[6].get(r), '%')) },
+  { k: 'leads', l: 'Leads (all)',  c: r => na(r.wcOk, r.wcOk ? fmt(r.leads, 'n') : '—') },
+];
+const TDEFAULT_HIDDEN = ['ctr', 'cpc', 'cpj'];
+let TORDER, THIDDEN;
+function loadLayout() {
+  let o = null, h = null;
+  try { o = JSON.parse(localStorage.getItem('ads_tbl_order') || 'null'); h = JSON.parse(localStorage.getItem('ads_tbl_hidden') || 'null'); } catch (e) {}
+  const keys = TCOLS.map(c => c.k);
+  TORDER = Array.isArray(o) ? o.filter(k => keys.includes(k)) : keys.slice();
+  keys.forEach(k => { if (!TORDER.includes(k)) TORDER.push(k); });           // columns added later go at the end
+  TORDER = ['week'].concat(TORDER.filter(k => k !== 'week'));              // week always first
+  THIDDEN = Array.isArray(h) ? h.filter(k => keys.includes(k) && k !== 'week') : TDEFAULT_HIDDEN.slice();
+}
+function saveLayout() { try { localStorage.setItem('ads_tbl_order', JSON.stringify(TORDER)); localStorage.setItem('ads_tbl_hidden', JSON.stringify(THIDDEN)); } catch (e) {} }
+let TIDX = 0;
+function renderTable(idx) {
+  if (idx !== undefined) TIDX = idx;
+  if (!TORDER) loadLayout();
+  const cols = TORDER.filter(k => !THIDDEN.includes(k)).map(k => TCOLS.find(c => c.k === k));
+  const last = ROWS.slice(0, TIDX + 1).reverse();
+  $('tbl').innerHTML = '<thead><tr>' + cols.map(c => `<th data-k="${c.k}" ${c.k === 'week' ? '' : 'draggable="true"'} title="${c.k === 'week' ? '' : 'Drag to move'}">${c.k === 'week' ? '' : '<span class="grip">⋮⋮</span>'}${c.l}</th>`).join('') + '</tr></thead><tbody>' +
+    last.map(r => '<tr>' + cols.map(c => { const x = c.c(r); return `<td class="${x.ok ? '' : 'na'}">${x.html}</td>`; }).join('') + '</tr>').join('') + '</tbody>';
+  // drag and drop headers
+  let dragK = null;
+  document.querySelectorAll('#tbl th[draggable]').forEach(th => {
+    th.ondragstart = e => { dragK = th.dataset.k; th.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; try { e.dataTransfer.setData('text/plain', dragK); } catch (_) {} };
+    th.ondragend = () => { th.classList.remove('dragging'); document.querySelectorAll('#tbl th').forEach(x => x.classList.remove('drop-l', 'drop-r')); };
+    th.ondragover = e => { if (!dragK || dragK === th.dataset.k) return; e.preventDefault();
+      const rc = th.getBoundingClientRect(), right = e.clientX > rc.left + rc.width / 2;
+      document.querySelectorAll('#tbl th').forEach(x => x.classList.remove('drop-l', 'drop-r')); th.classList.add(right ? 'drop-r' : 'drop-l'); };
+    th.ondrop = e => { e.preventDefault(); if (!dragK || dragK === th.dataset.k) return;
+      const rc = th.getBoundingClientRect(), right = e.clientX > rc.left + rc.width / 2;
+      TORDER = TORDER.filter(k => k !== dragK); let i = TORDER.indexOf(th.dataset.k) + (right ? 1 : 0);
+      TORDER.splice(Math.max(1, i), 0, dragK); saveLayout(); renderTable(); renderColPanel(); };
+  });
+}
+function renderColPanel() {
+  if (!TORDER) loadLayout();
+  const movable = TORDER.filter(k => k !== 'week');
+  $('collist').innerHTML = movable.map((k, i) => { const c = TCOLS.find(x => x.k === k);
+    return `<li><input type="checkbox" data-k="${k}" ${THIDDEN.includes(k) ? '' : 'checked'} aria-label="Show ${c.l}"><span>${c.l}</span>
+      <button class="mv" data-k="${k}" data-d="-1" ${i === 0 ? 'disabled' : ''} aria-label="Move ${c.l} left">↑</button>
+      <button class="mv" data-k="${k}" data-d="1" ${i === movable.length - 1 ? 'disabled' : ''} aria-label="Move ${c.l} right">↓</button></li>`; }).join('');
+  document.querySelectorAll('#collist input').forEach(cb => cb.onchange = () => {
+    const k = cb.dataset.k; THIDDEN = cb.checked ? THIDDEN.filter(x => x !== k) : THIDDEN.concat(k); saveLayout(); renderTable(); });
+  document.querySelectorAll('#collist .mv').forEach(bt => bt.onclick = () => {
+    const k = bt.dataset.k, d = +bt.dataset.d, i = TORDER.indexOf(k), j = i + d;
+    if (j < 1 || j >= TORDER.length) return; [TORDER[i], TORDER[j]] = [TORDER[j], TORDER[i]]; saveLayout(); renderTable(); renderColPanel(); });
+}
+$('colbtn').onclick = () => { $('colpanel').classList.toggle('open'); renderColPanel(); };
+$('colreset').onclick = () => { try { localStorage.removeItem('ads_tbl_order'); localStorage.removeItem('ads_tbl_hidden'); } catch (e) {} TORDER = null; loadLayout(); renderTable(); renderColPanel(); };
 
 /* ── Charts (inline SVG, single axis) ───────────────────── */
 function scaleFor(vals, f) {
