@@ -44,7 +44,7 @@ w = {r['week_start']: r for r in (dig(W, 'weeks') or [])} if W else {}
 m = {r['week_start']: r for r in (dig(M, 'weeks') or [])} if M else {}
 fn = {r['week_start']: r for r in (dig(FN, 'weeks') or [])} if FN else {}
 if M is None: failed.append('microsoft sheet error — Microsoft spend left as previous value')
-if FN is None: failed.append('funnel (ad-attributed leads/jobs) error — funnel values left as previous value')
+if FN is None and ff: failed.append('funnel (ad-attributed leads/jobs) error — funnel values left as previous value')
 rows = {r[0]: r for r in A['WEEKS']}
 I = {c: i for i, c in enumerate(COLS)}
 for wk in sorted(set(g) & set(w)):
