@@ -43,7 +43,7 @@
   }
   .back { color: var(--teal); text-decoration: none; font-size: 13px; font-weight: 600; }
   .back:hover { text-decoration: underline; }
-  main { max-width: 1120px; margin: 0 auto; padding: 40px 28px 100px; }
+  main { max-width: 1320px; margin: 0 auto; padding: 40px 28px 100px; }
   .eyebrow { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .12em; color: var(--teal); }
   h1 { font-size: clamp(28px, 4.5vw, 44px); font-weight: 900; line-height: 1.15; margin: 8px 0 14px; }
   .sub { color: var(--muted); font-size: 17px; max-width: 66ch; }
@@ -79,6 +79,37 @@
   .n { font-variant-numeric: tabular-nums; color: var(--white); font-weight: 600; }
   .ix { display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px; border-radius:5px;
         background: var(--teal); color: var(--navy-deep); font-size:11px; font-weight:800; margin-right:8px; }
+
+
+  /* Services-by-ICP matrix */
+  .matrixwrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--navy-card); }
+  .matrix { border-collapse: separate; border-spacing: 0; width: 100%; min-width: 860px; font-size: 14px; table-layout: fixed; }
+  .matrix col.profile { width: 250px; }
+  .matrix thead th { text-align: center; padding: 14px 8px; font-size: 11px; font-weight: 700; text-transform: uppercase;
+             letter-spacing: .07em; color: var(--muted); background: #1a2536; border-bottom: 1px solid var(--line-strong);
+             white-space: normal; line-height: 1.25; vertical-align: bottom; }
+  .matrix thead th:first-child { text-align: left; padding-left: 18px; }
+  .matrix tbody td { padding: 0; height: 58px; text-align: center; vertical-align: middle; border-bottom: 1px solid var(--line); }
+  .matrix tbody tr:last-child td { border-bottom: 0; }
+  .matrix tbody tr:hover td { background: rgba(255,255,255,.035); }
+  .matrix .who { position: sticky; left: 0; z-index: 2; background: var(--navy-card); text-align: left; padding: 0 16px 0 18px;
+                 border-right: 1px solid var(--line-strong); white-space: nowrap; }
+  .matrix thead th:first-child { position: sticky; left: 0; z-index: 3; border-right: 1px solid var(--line-strong); }
+  .matrix tbody tr:hover .who { background: #1a2536; }
+  .matrix .who .nm { display: inline-flex; align-items: center; gap: 10px; color: var(--white); font-weight: 700; font-size: 14.5px; }
+  .matrix .who .ix { width: 24px; height: 24px; font-size: 12px; margin: 0; border-radius: 6px; flex: none; }
+  .pk { display: inline-flex; align-items: center; justify-content: center; min-width: 34px; height: 30px; padding: 0 10px;
+        border-radius: 7px; font-weight: 800; font-size: 13px; letter-spacing: .04em; line-height: 1; }
+  .pk.p { background: var(--teal); color: var(--navy-deep); box-shadow: 0 0 0 1px rgba(0,161,154,.35), 0 4px 12px rgba(0,161,154,.28); }
+  .pk.s { background: transparent; color: var(--white); border: 1.5px solid rgba(255,255,255,.42); }
+  .pk.n { color: rgba(154,167,184,.45); font-weight: 600; }
+  .legend { display: flex; flex-wrap: wrap; gap: 18px 26px; align-items: center; margin: 0 0 14px; color: #c3ccd9; font-size: 14px; }
+  .legend .lg { display: inline-flex; align-items: center; gap: 9px; }
+  @media (max-width: 1100px) {
+    .matrix thead th { font-size: 10px; letter-spacing: .03em; padding: 12px 4px; overflow-wrap: anywhere; }
+    .matrix col.profile { width: 190px; }
+    .matrix .who .nm { font-size: 13.5px; white-space: normal; line-height: 1.25; }
+  }
 
   .steps { display: flex; flex-direction: column; gap: 16px; max-width: 76ch; counter-reset: s; }
   .step { display: flex; gap: 15px; align-items: flex-start; }
@@ -195,21 +226,26 @@
     <div class="sect-head"><h2>Services by ICP</h2><span class="tag">what we advertise to whom</span></div>
     <div class="prose" style="margin-bottom:20px">
       <p>emergencycleanings.com publishes nine service pages. Each one is a landing page, so each one needs to know which buyer its ad copy is speaking to. No mold, water or fire restoration anywhere in the set.</p>
-      <p><b style="color:var(--teal)">P</b> means the ad set leads with that service. <b>S</b> means it appears on the landing page and never in the headline. <span style="color:var(--muted)">No</span> means we do not advertise that service to that profile at all.</p>
     </div>
-    <div class="tablewrap">
-      <table>
+    <div class="legend">
+      <span class="lg"><span class="pk p">P</span> Primary. The ad set leads with it.</span>
+      <span class="lg"><span class="pk s">S</span> Secondary. On the landing page, never in the headline.</span>
+      <span class="lg"><span class="pk n">&mdash;</span> Not advertised to this profile.</span>
+    </div>
+    <div class="matrixwrap">
+      <table class="matrix">
+        <colgroup><col class="profile"><col><col><col><col><col><col><col><col><col></colgroup>
         <thead><tr><th>Profile</th><th>Hoarding</th><th>Emergency</th><th>Junk Removal</th><th>After Death</th><th>Industrial</th><th>Sewage Backup</th><th>Spill</th><th>Feces &amp; Urine</th><th>Encampment</th></tr></thead>
         <tbody>
-          <tr><td><span class="ix">1</span>The Family Caregiver</td><td><b style="color:var(--teal)">P</b></td><td>S</td><td>S</td><td>S</td><td style="color:var(--muted)">No</td><td>S</td><td style="color:var(--muted)">No</td><td>S</td><td style="color:var(--muted)">No</td></tr>
-          <tr><td><span class="ix">2</span>The Property Manager</td><td>S</td><td><b style="color:var(--teal)">P</b></td><td><b style="color:var(--teal)">P</b></td><td>S</td><td style="color:var(--muted)">No</td><td>S</td><td>S</td><td>S</td><td>S</td></tr>
-          <tr><td><span class="ix">3</span>The Estate Closer</td><td>S</td><td>S</td><td><b style="color:var(--teal)">P</b></td><td>S</td><td style="color:var(--muted)">No</td><td>S</td><td style="color:var(--muted)">No</td><td>S</td><td style="color:var(--muted)">No</td></tr>
-          <tr><td><span class="ix">4</span>The Plant Manager</td><td style="color:var(--muted)">No</td><td>S</td><td>S</td><td>S</td><td><b style="color:var(--teal)">P</b></td><td>S</td><td><b style="color:var(--teal)">P</b></td><td>S</td><td>S</td></tr>
-          <tr><td><span class="ix">5</span>The Resident</td><td><b style="color:var(--teal)">P</b></td><td style="color:var(--muted)">No</td><td>S</td><td style="color:var(--muted)">No</td><td style="color:var(--muted)">No</td><td>S</td><td style="color:var(--muted)">No</td><td>S</td><td style="color:var(--muted)">No</td></tr>
-          <tr><td><span class="ix">6</span>The Agency Case Manager</td><td><b style="color:var(--teal)">P</b></td><td>S</td><td>S</td><td>S</td><td style="color:var(--muted)">No</td><td>S</td><td style="color:var(--muted)">No</td><td><b style="color:var(--teal)">P</b></td><td>S</td></tr>
-          <tr><td><span class="ix">7</span>Commercial Property Owner</td><td style="color:var(--muted)">No</td><td><b style="color:var(--teal)">P</b></td><td><b style="color:var(--teal)">P</b></td><td>S</td><td>S</td><td>S</td><td>S</td><td>S</td><td><b style="color:var(--teal)">P</b></td></tr>
-          <tr><td><span class="ix">8</span>Residential Property Owner</td><td>S</td><td><b style="color:var(--teal)">P</b></td><td><b style="color:var(--teal)">P</b></td><td>S</td><td style="color:var(--muted)">No</td><td>S</td><td>S</td><td>S</td><td style="color:var(--muted)">No</td></tr>
-          <tr><td><span class="ix">9</span>Commercial Insurance Adj.</td><td style="color:var(--muted)">No</td><td>S</td><td>S</td><td><b style="color:var(--teal)">P</b></td><td><b style="color:var(--teal)">P</b></td><td>S</td><td><b style="color:var(--teal)">P</b></td><td>S</td><td style="color:var(--muted)">No</td></tr>
+          <tr><td class="who"><span class="nm"><span class="ix">1</span>The Family Caregiver</span></td><td><span class="pk p" title="Primary: ad set leads with it">P</span></td><td><span class="pk s" title="Secondary: on the landing page, not the headline">S</span></td><td><span class="pk s" title="Secondary: on the landing page, not the headline">S</span></td><td><span class="pk s" title="Secondary: on the landing page, not the headline">S</span></td><td><span class="pk n" title="Not advertised to this profile">&mdash;</span></td><td><span class="pk s" title="Secondary: on the landing page, not the headline">S</span></td><td><span class="pk n" title="Not advertised to this profile">&mdash;</span></td><td><span class="pk s" title="Secondary: on the landing page, not the headline">S</span></td><td><span class="pk n" title="Not advertised to this profile">&mdash;</span></td></tr>
+          <tr><td class="who"><span class="nm"><span class="ix">2</span>The Property Manager</span></td><td><span class="pk s" title="Secondary: on the landing page, not the headline">S</span></td><td><span class="pk p" title="Primary: ad set leads with it">P</span></td><td><span class="pk p" title="Primary: ad set leads with it">P</span></td><td><span class="pk s" title="Secondary: on the landing page, not the headline">S</span></td><td><span class="pk n" title="Not advertised to this profile">&mdash;</span></td><td><span class="pk s" title="Secondary: on the landing page, not the headline">S</span></td><td><span class="pk s" title="Secondary: on the landing page, not the headline">S</span></td><td><span class="pk s" title="Secondary: on the landing page, not the headline">S</span></td><td><span class="pk s" title="Secondary: on the landing page, not the headline">S</span></td></tr>
+          <tr><td class="who"><span class="nm"><span class="ix">3</span>The Estate Closer</span></td><td><span class="pk s" title="Secondary: on the landing page, not the headline">S</span></td><td><span class="pk s" title="Secondary: on the landing page, not the headline">S</span></td><td><span class="pk p" title="Primary: ad set leads with it">P</span></td><td><span class="pk s" title="Secondary: on the landing page, not the headline">S</span></td><td><span class="pk n" title="Not advertised to this profile">&mdash;</span></td><td><span class="pk s" title="Secondary: on the landing page, not the headline">S</span></td><td><span class="pk n" title="Not advertised to this profile">&mdash;</span></td><td><span class="pk s" title="Secondary: on the landing page, not the headline">S</span></td><td><span class="pk n" title="Not advertised to this profile">&mdash;</span></td></tr>
+          <tr><td class="who"><span class="nm"><span class="ix">4</span>The Plant Manager</span></td><td><span class="pk n" title="Not advertised to this profile">&mdash;</span></td><td><span class="pk s" title="Secondary: on the landing page, not the headline">S</span></td><td><span class="pk s" title="Secondary: on the landing page, not the headline">S</span></td><td><span class="pk s" title="Secondary: on the landing page, not the headline">S</span></td><td><span class="pk p" title="Primary: ad set leads with it">P</span></td><td><span class="pk s" title="Secondary: on the landing page, not the headline">S</span></td><td><span class="pk p" title="Primary: ad set leads with it">P</span></td><td><span class="pk s" title="Secondary: on the landing page, not the headline">S</span></td><td><span class="pk s" title="Secondary: on the landing page, not the headline">S</span></td></tr>
+          <tr><td class="who"><span class="nm"><span class="ix">5</span>The Resident</span></td><td><span class="pk p" title="Primary: ad set leads with it">P</span></td><td><span class="pk n" title="Not advertised to this profile">&mdash;</span></td><td><span class="pk s" title="Secondary: on the landing page, not the headline">S</span></td><td><span class="pk n" title="Not advertised to this profile">&mdash;</span></td><td><span class="pk n" title="Not advertised to this profile">&mdash;</span></td><td><span class="pk s" title="Secondary: on the landing page, not the headline">S</span></td><td><span class="pk n" title="Not advertised to this profile">&mdash;</span></td><td><span class="pk s" title="Secondary: on the landing page, not the headline">S</span></td><td><span class="pk n" title="Not advertised to this profile">&mdash;</span></td></tr>
+          <tr><td class="who"><span class="nm"><span class="ix">6</span>The Agency Case Manager</span></td><td><span class="pk p" title="Primary: ad set leads with it">P</span></td><td><span class="pk s" title="Secondary: on the landing page, not the headline">S</span></td><td><span class="pk s" title="Secondary: on the landing page, not the headline">S</span></td><td><span class="pk s" title="Secondary: on the landing page, not the headline">S</span></td><td><span class="pk n" title="Not advertised to this profile">&mdash;</span></td><td><span class="pk s" title="Secondary: on the landing page, not the headline">S</span></td><td><span class="pk n" title="Not advertised to this profile">&mdash;</span></td><td><span class="pk p" title="Primary: ad set leads with it">P</span></td><td><span class="pk s" title="Secondary: on the landing page, not the headline">S</span></td></tr>
+          <tr><td class="who"><span class="nm"><span class="ix">7</span>Commercial Property Owner</span></td><td><span class="pk n" title="Not advertised to this profile">&mdash;</span></td><td><span class="pk p" title="Primary: ad set leads with it">P</span></td><td><span class="pk p" title="Primary: ad set leads with it">P</span></td><td><span class="pk s" title="Secondary: on the landing page, not the headline">S</span></td><td><span class="pk s" title="Secondary: on the landing page, not the headline">S</span></td><td><span class="pk s" title="Secondary: on the landing page, not the headline">S</span></td><td><span class="pk s" title="Secondary: on the landing page, not the headline">S</span></td><td><span class="pk s" title="Secondary: on the landing page, not the headline">S</span></td><td><span class="pk p" title="Primary: ad set leads with it">P</span></td></tr>
+          <tr><td class="who"><span class="nm"><span class="ix">8</span>Residential Property Owner</span></td><td><span class="pk s" title="Secondary: on the landing page, not the headline">S</span></td><td><span class="pk p" title="Primary: ad set leads with it">P</span></td><td><span class="pk p" title="Primary: ad set leads with it">P</span></td><td><span class="pk s" title="Secondary: on the landing page, not the headline">S</span></td><td><span class="pk n" title="Not advertised to this profile">&mdash;</span></td><td><span class="pk s" title="Secondary: on the landing page, not the headline">S</span></td><td><span class="pk s" title="Secondary: on the landing page, not the headline">S</span></td><td><span class="pk s" title="Secondary: on the landing page, not the headline">S</span></td><td><span class="pk n" title="Not advertised to this profile">&mdash;</span></td></tr>
+          <tr><td class="who"><span class="nm"><span class="ix">9</span>Commercial Insurance Adj.</span></td><td><span class="pk n" title="Not advertised to this profile">&mdash;</span></td><td><span class="pk s" title="Secondary: on the landing page, not the headline">S</span></td><td><span class="pk s" title="Secondary: on the landing page, not the headline">S</span></td><td><span class="pk p" title="Primary: ad set leads with it">P</span></td><td><span class="pk p" title="Primary: ad set leads with it">P</span></td><td><span class="pk s" title="Secondary: on the landing page, not the headline">S</span></td><td><span class="pk p" title="Primary: ad set leads with it">P</span></td><td><span class="pk s" title="Secondary: on the landing page, not the headline">S</span></td><td><span class="pk n" title="Not advertised to this profile">&mdash;</span></td></tr>
         </tbody>
       </table>
     </div>
