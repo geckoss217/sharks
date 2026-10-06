@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Lead &amp; Booking Timing · Emergency Cleanings Internal</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🕒</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy-deep: #0a0f1e;
+    --navy: #1e2a3a;
+    --navy-card: #16202e;
+    --teal: #00a19a;
+    --orange: #ff6b00;
+    --white: #ffffff;
+    --muted: #9aa7b8;
+    --line: rgba(255,255,255,0.08);
+    --line-strong: rgba(255,255,255,0.16);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Poppins', sans-serif; background: var(--navy-deep); color: var(--white); min-height: 100vh; line-height: 1.5; font-size: 15px; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 28px;
+           border-bottom: 1px solid var(--line); background: var(--navy-card); position: sticky; top: 0; z-index: 40; }
+  header img { height: 34px; width: auto; }
+  .hright { display: flex; align-items: center; gap: 14px; }
+  .badge { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--muted);
+           border: 1px solid var(--line-strong); border-radius: 999px; padding: 5px 12px; white-space: nowrap; }
+  .back { color: var(--teal); text-decoration: none; font-size: 13px; font-weight: 600; white-space: nowrap; }
+  .back:hover { text-decoration: underline; }
+  main { max-width: 1240px; margin: 0 auto; padding: 36px 24px 90px; }
+  .eyebrow { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .12em; color: var(--teal); }
+  h1 { font-size: clamp(28px, 4.5vw, 42px); font-weight: 900; line-height: 1.15; margin: 6px 0 10px; }
+  h2 { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+  .sub { color: var(--muted); font-size: 15px; max-width: 75ch; }
+  .controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; margin-top: 24px; }
+  .ctl { display: flex; flex-direction: column; gap: 4px; }
+  .ctl.hidden { display: none; }
+  .ctl label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+  select, input { font-family: inherit; font-size: 14px; color: var(--white); background: var(--navy); border: 1px solid var(--line-strong);
+                  border-radius: 8px; padding: 8px 10px; min-width: 150px; color-scheme: dark; }
+  .tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; }
+  .tab { font-family: inherit; font-size: 13px; font-weight: 600; color: var(--muted); background: transparent; border: 1px solid var(--line-strong);
+         border-radius: 50px; padding: 8px 18px; cursor: pointer; }
+  .tab.on { background: var(--orange); border-color: var(--orange); color: var(--white); }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; margin-top: 22px; }
+  .kpi { background: var(--navy); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; }
+  .kpi .l { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+  .kpi .v { font-size: 30px; font-weight: 900; line-height: 1.2; margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .kpi .s { font-size: 12px; color: var(--muted); }
+  .panel { background: var(--navy-card); border: 1px solid var(--line); border-radius: 16px; padding: 20px; margin-top: 22px; }
+  .panel .desc { color: var(--muted); font-size: 13px; margin-bottom: 14px; }
+  .scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table.hm { border-collapse: separate; border-spacing: 3px; width: 100%; min-width: 860px; font-variant-numeric: tabular-nums; }
+  table.hm th { font-size: 11px; font-weight: 600; color: var(--muted); padding: 2px 0; text-align: center; white-space: nowrap; }
+  table.hm th.rowh { text-align: left; padding-right: 8px; width: 44px; }
+  table.hm td { height: 38px; min-width: 30px; border-radius: 5px; text-align: center; font-size: 11px; font-weight: 600; cursor: default; position: relative; }
+  table.hm td.cell { background: rgba(255,255,255,0.03); }
+  table.hm td.low { background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.05) 0 4px, transparent 4px 8px); color: var(--muted) !important; }
+  table.hm td.tot { background: transparent; color: var(--muted); font-size: 11px; }
+  table.hm td.cell:hover, table.hm td.cell.sel { outline: 2px solid var(--orange); outline-offset: -1px; }
+  .legend { display: flex; align-items: center; gap: 10px; margin-top: 12px; font-size: 12px; color: var(--muted); flex-wrap: wrap; }
+  .ramp { width: 180px; height: 10px; border-radius: 5px; }
+  .lowkey { display: inline-block; width: 22px; height: 12px; border-radius: 3px; vertical-align: middle; margin-right: 4px;
+            background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.12) 0 4px, transparent 4px 8px); border: 1px solid var(--line-strong); }
+  .detail { margin-top: 12px; min-height: 22px; font-size: 13px; color: var(--white); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+  @media (max-width: 860px) { .grid2 { grid-template-columns: 1fr; } }
+  ol.best { list-style: none; counter-reset: b; }
+  ol.best li { counter-increment: b; display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+  ol.best li:last-child { border-bottom: 0; }
+  ol.best li::before { content: counter(b); color: var(--orange); font-weight: 900; width: 20px; flex: none; }
+  ol.best li span.n { flex: 1; }
+  ol.best li b { font-variant-numeric: tabular-nums; }
+  ol.best li small { color: var(--muted); }
+  .bars { display: grid; gap: 6px; }
+  .bar { display: grid; grid-template-columns: 44px 1fr 70px; align-items: center; gap: 10px; font-size: 13px; }
+  .bar .track { height: 14px; background: rgba(255,255,255,0.04); border-radius: 4px; overflow: hidden; }
+  .bar .fill { height: 100%; background: var(--teal); border-radius: 4px; }
+  .bar .val { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .notes { margin-top: 26px; color: var(--muted); font-size: 13px; }
+  .notes li { margin: 4px 0 4px 18px; }
+  .meta { color: var(--muted); font-size: 12px; margin-top: 10px; }
+  .err { display: none; margin-top: 18px; padding: 12px 16px; border-radius: 12px; background: rgba(255,90,95,.12); border: 1px solid rgba(255,90,95,.5); }
+  @media (max-width: 600px) {
+    header { padding: 14px 16px; } header img { height: 28px; } .badge { display: none; }
+    main { padding: 26px 16px 70px; } select, input { min-width: 0; width: 100%; } .ctl { flex: 1 1 140px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <a href="/"><img src="https://emergencycleanings.com/wp-content/uploads/2026/07/Final-logo-for-buyer-png.png" alt="Emergency Cleanings"></a>
+  <div class="hright"><a class="back" href="/">&larr; All tools</a><span class="badge">Internal · Team Only</span></div>
+</header>
+<main>
+  <div class="eyebrow">Sales &amp; Marketing</div>
+  <h1>Lead &amp; Booking Timing</h1>
+  <p class="sub">The days and hours when leads come in and when jobs get booked, from WhatConverts. All times are MDT (Denver).</p>
+
+  <div class="controls">
+    <div class="ctl"><label for="period">Time period</label>
+      <select id="period">
+        <option value="30">Last 30 days</option>
+        <option value="90" selected>Last 90 days</option>
+        <option value="tq">This quarter</option>
+        <option value="lq">Last quarter</option>
+        <option value="ytd">Year to date</option>
+        <option value="365">Last 12 months</option>
+        <option value="all">All data (since Jun 2025)</option>
+        <option value="month">A specific month</option>
+        <option value="custom">Custom dates</option>
+      </select></div>
+    <div class="ctl hidden" id="monthWrap"><label for="month">Month</label><select id="month"></select></div>
+    <div class="ctl hidden" id="fromWrap"><label for="from">From</label><input type="date" id="from"></div>
+    <div class="ctl hidden" id="toWrap"><label for="to">To</label><input type="date" id="to"></div>
+    <div class="ctl"><label for="rep">Sales rep</label><select id="rep"></select></div>
+    <div class="ctl"><label for="src">Source</label><select id="src"></select></div>
+    <div class="ctl"><label for="type">Lead type</label><select id="type"></select></div>
+  </div>
+
+  <div class="tabs" id="tabs">
+    <button class="tab on" data-m="leads">Leads</button>
+    <button class="tab" data-m="quot">Quotable leads</button>
+    <button class="tab" data-m="book">Bookings</button>
+    <button class="tab" data-m="rate">Close rate</button>
+  </div>
+
+  <div class="kpis" id="kpis"></div>
+  <div class="err" id="err"></div>
+
+  <div class="panel">
+    <h2 id="hmTitle">Leads by day and hour</h2>
+    <div class="desc" id="hmDesc"></div>
+    <div class="scroll"><table class="hm" id="hm"></table></div>
+    <div class="legend" id="legend"></div>
+    <div class="detail" id="detail">Hover or tap a square for the details.</div>
+  </div>
+
+  <div class="grid2">
+    <div class="panel">
+      <h2 id="bestTitle">Best time slots</h2>
+      <div class="desc" id="bestDesc"></div>
+      <ol class="best" id="best"></ol>
+    </div>
+    <div class="panel">
+      <h2 id="dowTitle">By day of week</h2>
+      <div class="desc" id="dowDesc"></div>
+      <div class="bars" id="dow"></div>
+    </div>
+  </div>
+
+  <ul class="notes">
+    <li><b>Leads</b>: one per inquiry. Calls, forms and chats from the same phone or email within 30 days count once, at the time of the first contact. Test and internal calls (Sales Stage "Marketing-Sales Call") are left out.</li>
+    <li><b>Quotable leads</b>: inquiries where any contact was marked Quotable = Yes.</li>
+    <li><b>Bookings</b>: Transaction items in WhatConverts, placed at the time the Transaction was created. Cancelled transactions are left out. Transactions start in September 2025, so earlier periods show no bookings.</li>
+    <li><b>Close rate</b>: booked inquiries ÷ quotable inquiries, placed at the time the <i>lead</i> came in, so you can see which hours bring in leads that turn into jobs. Squares with fewer than <span id="minN"></span> quotable leads are hatched because the rate isn't reliable yet.</li>
+  </ul>
+  <div class="meta" id="meta"></div>
+</main>
+
+<script>
+/* ---------- data loading ---------- */
+window.LT = { parts: [], add(o) { this.parts.push(o); } };
+const BASE = '/data/lead-timing/';
+const MIN_RATE_N = 15;
+const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const DAYS_LONG = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+const REP_NAMES = { SMR: 'Silvia Ramos', KTA: 'Karine Tellez', SAM: 'Stiven Monjaras', IBP: 'Igny Baez', DTJ: 'Dustin Jackson', TBD: 'Unassigned' };
+const ACTIVE_REPS = ['SMR', 'KTA'];
+const METRICS = {
+  leads: { title: 'Leads', unit: 'leads', desc: 'When new inquiries arrive (time of first contact).' },
+  quot:  { title: 'Quotable leads', unit: 'quotable leads', desc: 'When quotable inquiries arrive (time of first contact).' },
+  book:  { title: 'Bookings', unit: 'bookings', desc: 'When jobs were booked (time the Transaction was created in WhatConverts).' },
+  rate:  { title: 'Close rate', unit: '', desc: 'Share of quotable leads arriving in each slot that went on to book.' }
+};
+function loadScript(src) {
+  return new Promise((res, rej) => { const s = document.createElement('script'); s.src = src + '?v=' + Date.now(); s.onload = res; s.onerror = () => rej(src); document.head.appendChild(s); });
+}
+function hour12(h) { return h === 0 ? '12a' : h < 12 ? h + 'a' : h === 12 ? '12p' : (h - 12) + 'p'; }
+function hourLong(h) { return h === 0 ? '12 AM' : h < 12 ? h + ' AM' : h === 12 ? '12 PM' : (h - 12) + ' PM'; }
+function fmt(n) { return n.toLocaleString('en-US'); }
+function pct(a, b) { return b ? (100 * a / b) : 0; }
+
+let M, INQ, BK, EPOCH, FIRST_DAY_NUM, LAST_DAY_NUM;
+let metric = 'leads';
+
+function decode(str) {
+  const n = str.length / 8, out = { day: new Int32Array(n), hour: new Int8Array(n), type: new Int8Array(n), src: new Int8Array(n), rep: new Int8Array(n), flags: new Int8Array(n) };
+  for (let i = 0; i < n; i++) {
+    const s = str.substr(i * 8, 8);
+    out.day[i] = parseInt(s.substr(0, 3), 36); out.hour[i] = parseInt(s[3], 36); out.type[i] = +s[4];
+    out.src[i] = +s[5]; out.rep[i] = parseInt(s[6], 36); out.flags[i] = +s[7];
+  }
+  return out;
+}
+function concat(list) {
+  const keys = ['day','hour','type','src','rep','flags'], len = list.reduce((a, x) => a + x.day.length, 0), out = {};
+  keys.forEach(k => { out[k] = new (list[0] ? list[0][k].constructor : Int32Array)(len); let o = 0; list.forEach(x => { out[k].set(x[k], o); o += x[k].length; }); });
+  out.n = len; return out;
+}
+function dayNum(dateStr) { return Math.round((Date.parse(dateStr + 'T00:00:00Z') - EPOCH) / 864e5); }
+function dateOf(n) { return new Date(EPOCH + n * 864e5).toISOString().slice(0, 10); }
+function dowOf(n) { return (new Date(EPOCH + n * 864e5).getUTCDay() + 6) % 7; } // Mon=0
+
+async function init() {
+  try {
+    await loadScript(BASE + 'manifest.js');
+    M = LT.parts.find(p => p.kind === 'manifest');
+    await Promise.all(M.quarters.map(q => loadScript(BASE + 'q-' + q + '.js')).concat([loadScript(BASE + 'recent.js')]));
+  } catch (e) {
+    const el = document.getElementById('err'); el.style.display = 'block'; el.textContent = 'Could not load data file ' + e + '. Refresh the page; if it keeps failing, the nightly refresh may have broken.'; return;
+  }
+  EPOCH = Date.parse(M.epoch + 'T00:00:00Z');
+  const recent = LT.parts.find(p => p.kind === 'recent');
+  const cut = dayNum(recent.from);
+  const inqParts = [], bkParts = [];
+  LT.parts.filter(p => p.kind === 'quarter').forEach(p => {
+    const a = decode(p.inq), b = decode(p.bk);
+    inqParts.push(filterDays(a, d => d < cut)); bkParts.push(filterDays(b, d => d < cut));
+  });
+  inqParts.push(decode(recent.inq)); bkParts.push(decode(recent.bk));
+  INQ = concat(inqParts); BK = concat(bkParts);
+  FIRST_DAY_NUM = dayNum(M.firstDay); LAST_DAY_NUM = dayNum(M.dataThrough);
+  buildControls();
+  document.getElementById('meta').textContent = 'Data through ' + M.dataThrough + ' · refreshed ' + M.asOf + ' MDT · refreshes nightly after 11 PM.';
+  document.getElementById('minN').textContent = MIN_RATE_N;
+  render();
+}
+function filterDays(x, keep) {
+  const idx = []; for (let i = 0; i < x.day.length; i++) if (keep(x.day[i])) idx.push(i);
+  const o = {}; ['day','hour','type','src','rep','flags'].forEach(k => { o[k] = new x[k].constructor(idx.length); idx.forEach((j, i) => o[k][i] = x[k][j]); }); return o;
+}
+
+/* ---------- controls ---------- */
+function opt(sel, v, t) { const o = document.createElement('option'); o.value = v; o.textContent = t; sel.appendChild(o); return o; }
+function buildControls() {
+  const rep = document.getElementById('rep'); opt(rep, 'all', 'All reps');
+  const g1 = document.createElement('optgroup'); g1.label = 'Current reps';
+  const g2 = document.createElement('optgroup'); g2.label = 'Inactive / other';
+  M.reps.forEach((code, i) => {
+    const o = document.createElement('option'); o.value = i;
+    o.textContent = REP_NAMES[code] ? (code === 'TBD' ? 'Unassigned' : REP_NAMES[code] + ' (' + code + ')') : code;
+    (ACTIVE_REPS.includes(code) ? g1 : g2).appendChild(o);
+  });
+  rep.appendChild(g1); rep.appendChild(g2);
+  const src = document.getElementById('src'); opt(src, 'all', 'All sources'); opt(src, 'paid', 'All paid ads'); M.sources.forEach((s, i) => opt(src, i, s));
+  const type = document.getElementById('type'); opt(type, 'all', 'All types'); M.types.forEach((s, i) => opt(type, i, s === 'Call' ? 'Phone call' : s === 'Form' ? 'Web form' : s));
+  const month = document.getElementById('month');
+  const months = []; for (let d = FIRST_DAY_NUM; d <= LAST_DAY_NUM; d++) { const m = dateOf(d).slice(0, 7); if (!months.includes(m)) months.push(m); }
+  months.reverse().forEach(m => opt(month, m, new Date(m + '-15T12:00:00Z').toLocaleString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' })));
+  const from = document.getElementById('from'), to = document.getElementById('to');
+  from.min = to.min = M.firstDay; from.max = to.max = M.dataThrough;
+  from.value = dateOf(LAST_DAY_NUM - 89); to.value = M.dataThrough;
+  ['period','month','from','to','rep','src','type'].forEach(id => document.getElementById(id).addEventListener('change', render));
+  document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => {
+    metric = b.dataset.m; document.querySelectorAll('.tab').forEach(x => x.classList.toggle('on', x === b)); render();
+  }));
+}
+function range() {
+  const p = document.getElementById('period').value, last = LAST_DAY_NUM, lastDate = dateOf(last);
+  document.getElementById('monthWrap').classList.toggle('hidden', p !== 'month');
+  document.getElementById('fromWrap').classList.toggle('hidden', p !== 'custom');
+  document.getElementById('toWrap').classList.toggle('hidden', p !== 'custom');
+  const y = +lastDate.slice(0, 4), mo = +lastDate.slice(5, 7), qs = Math.floor((mo - 1) / 3) * 3 + 1;
+  const ds = (yy, mm, dd) => dayNum(yy + '-' + String(mm).padStart(2, '0') + '-' + String(dd).padStart(2, '0'));
+  let a, b = last, label;
+  if (/^\d+$/.test(p)) { a = last - (+p) + 1; label = document.querySelector('#period option:checked').textContent; }
+  else if (p === 'tq') { a = ds(y, qs, 1); label = 'This quarter'; }
+  else if (p === 'lq') { const ly = qs === 1 ? y - 1 : y, lqs = qs === 1 ? 10 : qs - 3; a = ds(ly, lqs, 1); b = ds(y, qs, 1) - 1; label = 'Last quarter'; }
+  else if (p === 'ytd') { a = ds(y, 1, 1); label = 'Year to date'; }
+  else if (p === 'all') { a = FIRST_DAY_NUM; label = 'All data'; }
+  else if (p === 'month') { const m = document.getElementById('month').value; a = dayNum(m + '-01'); const [yy, mm] = m.split('-').map(Number); b = (mm === 12 ? ds(yy + 1, 1, 1) : ds(yy, mm + 1, 1)) - 1; label = document.querySelector('#month option:checked').textContent; }
+  else { a = dayNum(document.getElementById('from').value || M.firstDay); b = dayNum(document.getElementById('to').value || M.dataThrough); if (a > b) [a, b] = [b, a]; label = 'Custom'; }
+  a = Math.max(a, FIRST_DAY_NUM); b = Math.min(b, last);
+  return { a, b, label, text: dateOf(a) + ' to ' + dateOf(b) };
+}
+
+/* ---------- aggregation ---------- */
+function aggregate() {
+  const r = range();
+  const rep = document.getElementById('rep').value, src = document.getElementById('src').value, type = document.getElementById('type').value;
+  const okSrc = s => src === 'all' || (src === 'paid' ? s <= 2 : s === +src);
+  const ok = (x, i) => x.day[i] >= r.a && x.day[i] <= r.b && (rep === 'all' || x.rep[i] === +rep) && okSrc(x.src[i]) && (type === 'all' || x.type[i] === +type);
+  const z = () => Array.from({ length: 7 }, () => new Array(24).fill(0));
+  const g = { leads: z(), quot: z(), booked: z(), book: z(), r };
+  for (let i = 0; i < INQ.n; i++) {
+    if (!ok(INQ, i)) continue;
+    const d = dowOf(INQ.day[i]), h = INQ.hour[i], f = INQ.flags[i];
+    g.leads[d][h]++; if (f & 1) g.quot[d][h]++; if (f & 2) g.booked[d][h]++;
+  }
+  for (let i = 0; i < BK.n; i++) {
+    if (!ok(BK, i)) continue;
+    g.book[dowOf(BK.day[i])][BK.hour[i]]++;
+  }
+  return g;
+}
+const sum = m => m.reduce((a, row) => a + row.reduce((x, y) => x + y, 0), 0);
+
+/* ---------- color ---------- */
+// teal sequential ramp on navy: low = faint, high = bright teal
+function color(t) {
+  t = Math.max(0, Math.min(1, t));
+  const a = [26, 40, 56], b = [0, 161, 154], c = [140, 240, 225];
+  const mix = (p, q, u) => p.map((v, i) => Math.round(v + (q[i] - v) * u));
+  const rgb = t < 0.7 ? mix(a, b, t / 0.7) : mix(b, c, (t - 0.7) / 0.3);
+  return 'rgb(' + rgb.join(',') + ')';
+}
+
+/* ---------- render ---------- */
+function cellValue(g, d, h) {
+  if (metric === 'rate') return { v: g.quot[d][h] ? g.booked[d][h] / g.quot[d][h] : null, n: g.quot[d][h], low: g.quot[d][h] < MIN_RATE_N };
+  const m = metric === 'leads' ? g.leads : metric === 'quot' ? g.quot : g.book;
+  return { v: m[d][h], n: m[d][h], low: false };
+}
+function describe(g, d, h) {
+  const L = g.leads[d][h], Q = g.quot[d][h], B = g.booked[d][h], K = g.book[d][h];
+  return '<b>' + DAYS_LONG[d] + ' ' + hourLong(h) + '–' + hourLong((h + 1) % 24) + '</b> · ' + fmt(L) + ' leads · ' + fmt(Q) + ' quotable · ' +
+    fmt(B) + ' of those booked' + (Q ? ' (' + pct(B, Q).toFixed(0) + '% close rate)' : '') + ' · ' + fmt(K) + ' bookings made in this hour';
+}
+function render() {
+  const g = aggregate(), r = g.r, meta = METRICS[metric];
+  const L = sum(g.leads), Q = sum(g.quot), B = sum(g.booked), K = sum(g.book);
+  const days = r.b - r.a + 1;
+  document.getElementById('kpis').innerHTML = [
+    ['Leads', fmt(L), (L / days).toFixed(1) + ' per day'],
+    ['Quotable leads', fmt(Q), pct(Q, L).toFixed(0) + '% of leads'],
+    ['Bookings', fmt(K), 'by booking time'],
+    ['Close rate', Q ? pct(B, Q).toFixed(1) + '%' : '–', fmt(B) + ' of ' + fmt(Q) + ' quotable booked']
+  ].map(k => '<div class="kpi"><div class="l">' + k[0] + '</div><div class="v">' + k[1] + '</div><div class="s">' + k[2] + '</div></div>').join('');
+
+  document.getElementById('hmTitle').textContent = meta.title + ' by day and hour';
+  let warn = '';
+  if (metric === 'book' && dateOf(r.a) < M.firstBooking) warn = ' Bookings data starts September 2025.';
+  document.getElementById('hmDesc').textContent = meta.desc + ' ' + r.label + ': ' + r.text + '.' + warn;
+
+  // values & scale
+  let max = 0; const vals = [];
+  for (let d = 0; d < 7; d++) { vals.push([]); for (let h = 0; h < 24; h++) { const c = cellValue(g, d, h); vals[d].push(c); if (c.v != null && !c.low && c.v > max) max = c.v; } }
+  const t = document.getElementById('hm');
+  let html = '<tr><th class="rowh"></th>' + Array.from({ length: 24 }, (_, h) => '<th>' + hour12(h) + '</th>').join('') + '<th>Total</th></tr>';
+  for (let d = 0; d < 7; d++) {
+    html += '<tr><th class="rowh">' + DAYS[d] + '</th>';
+    for (let h = 0; h < 24; h++) {
+      const c = vals[d][h]; let style = '', txt = '', cls = 'cell';
+      if (c.v != null && c.v > 0 || (metric === 'rate' && c.n > 0)) {
+        const tt = max ? c.v / max : 0;
+        style = c.low ? '' : 'background:' + color(Math.sqrt(tt)) + ';color:' + (tt > 0.45 ? '#06121a' : '#fff');
+        txt = metric === 'rate' ? Math.round(c.v * 100) + '%' : c.v;
+        if (c.low) cls += ' low';
+      }
+      html += '<td class="' + cls + '" data-d="' + d + '" data-h="' + h + '" style="' + style + '">' + txt + '</td>';
+    }
+    const rowTot = metric === 'rate' ? (rowSum(g.quot[d]) ? Math.round(100 * rowSum(g.booked[d]) / rowSum(g.quot[d])) + '%' : '–') : fmt(rowSum(metricMatrix(g)[d]));
+    html += '<td class="tot">' + rowTot + '</td></tr>';
+  }
+  html += '<tr><th class="rowh">Total</th>';
+  for (let h = 0; h < 24; h++) {
+    let v;
+    if (metric === 'rate') { const q = colSum(g.quot, h); v = q ? Math.round(100 * colSum(g.booked, h) / q) + '%' : ''; }
+    else { const x = colSum(metricMatrix(g), h); v = x ? fmt(x) : ''; }
+    html += '<td class="tot">' + v + '</td>';
+  }
+  html += '<td class="tot"></td></tr>';
+  t.innerHTML = html;
+  t.querySelectorAll('td.cell').forEach(td => {
+    const show = () => { t.querySelectorAll('td.sel').forEach(x => x.classList.remove('sel')); td.classList.add('sel'); document.getElementById('detail').innerHTML = describe(g, +td.dataset.d, +td.dataset.h); };
+    td.addEventListener('mouseenter', show); td.addEventListener('click', show);
+  });
+  const ramp = Array.from({ length: 11 }, (_, i) => color(Math.sqrt(i / 10))).join(',');
+  document.getElementById('legend').innerHTML = '<span>Fewer</span><span class="ramp" style="background:linear-gradient(90deg,' + ramp + ')"></span><span>More</span>' +
+    (metric === 'rate' ? '<span style="margin-left:14px"><span class="lowkey"></span>Under ' + MIN_RATE_N + ' quotable leads</span>' : '') +
+    (metric === 'rate' ? '<span style="margin-left:14px">Top of scale: ' + Math.round(max * 100) + '%</span>' : '<span style="margin-left:14px">Top of scale: ' + fmt(max) + '</span>');
+
+  // best slots
+  const slots = [];
+  for (let d = 0; d < 7; d++) for (let h = 0; h < 24; h++) { const c = vals[d][h]; if (c.v != null && !c.low && c.v > 0) slots.push({ d, h, c }); }
+  slots.sort((x, y) => y.c.v - x.c.v || y.c.n - x.c.n);
+  document.getElementById('bestTitle').textContent = 'Best time slots · ' + meta.title.toLowerCase();
+  document.getElementById('bestDesc').textContent = metric === 'rate' ? 'Highest close rates among slots with at least ' + MIN_RATE_N + ' quotable leads.' : 'The 8 busiest hour slots in this period.';
+  document.getElementById('best').innerHTML = slots.slice(0, 8).map(s => '<li><span class="n">' + DAYS_LONG[s.d] + ' ' + hourLong(s.h) + '</span><b>' +
+    (metric === 'rate' ? Math.round(s.c.v * 100) + '%' : fmt(s.c.v)) + '</b>' + (metric === 'rate' ? ' <small>' + g.booked[s.d][s.h] + ' of ' + s.c.n + '</small>' : '') + '</li>').join('') ||
+    '<li><span class="n">Not enough data for this filter.</span></li>';
+
+  // by day of week
+  const dv = DAYS.map((_, d) => metric === 'rate' ? (rowSum(g.quot[d]) ? rowSum(g.booked[d]) / rowSum(g.quot[d]) : 0) : rowSum(metricMatrix(g)[d]));
+  const lowDay = d => metric === 'rate' && rowSum(g.quot[d]) < MIN_RATE_N;
+  const dmax = Math.max(...dv.filter((_, d) => !lowDay(d)), 0) || 1;
+  document.getElementById('dowTitle').textContent = 'By day of week · ' + meta.title.toLowerCase();
+  document.getElementById('dowDesc').textContent = metric === 'rate' ? 'Close rate for leads arriving on each day.' : 'Totals for each day of the week.';
+  document.getElementById('dow').innerHTML = dv.map((v, d) => '<div class="bar"><span>' + DAYS[d] + '</span><div class="track"><div class="fill" style="width:' + Math.min(100, 100 * v / dmax) + '%' + (lowDay(d) ? ';opacity:.35' : '') + '"></div></div><span class="val">' +
+    (metric === 'rate' ? (rowSum(g.quot[d]) ? (v * 100).toFixed(1) + '%' + (rowSum(g.quot[d]) < MIN_RATE_N ? '*' : '') : '–') : fmt(v)) + '</span></div>').join('') +
+    (metric === 'rate' && dv.some((_, d) => rowSum(g.quot[d]) && rowSum(g.quot[d]) < MIN_RATE_N) ? '<div class="meta">* fewer than ' + MIN_RATE_N + ' quotable leads that day, so the rate is unreliable.</div>' : '');
+  document.getElementById('detail').textContent = 'Hover or tap a square for the details.';
+}
+function metricMatrix(g) { return metric === 'leads' ? g.leads : metric === 'quot' ? g.quot : g.book; }
+function rowSum(row) { return row.reduce((a, b) => a + b, 0); }
+function colSum(m, h) { return m.reduce((a, row) => a + row[h], 0); }
+
+init();
+</script>
+</body>
+</html>
