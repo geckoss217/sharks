@@ -16,7 +16,8 @@
 #              (a .json raw response with a "tsv" field also works)
 #   --meta     FacebookLeadAdsCLIAPI meta_weekly_insights (all ad accounts are summed)
 #   --ms-tsv   decoded TSV from MicrosoftAdvertisingCLIAPI msads_report_submit (campaign) + msads_zip_to_tsv
-#   --ms-sheet GoogleSheetsV2CLIAPI msads_weekly_cost (fallback for Microsoft spend/clicks when --ms-tsv is missing)
+#   --ms-sheet MicrosoftAdvertisingCLIAPI msads_weekly_account (fallback when --ms-tsv is missing). The retired
+#              GoogleSheetsV2CLIAPI msads_weekly_cost sheet response is ignored (Microsoft values are kept as they were).
 #
 # Replaces/adds each week present in BOTH the main Google and WhatConverts results. A source that errored or
 # was not supplied keeps its previous values for that week, and an error is recorded in FAILED.
@@ -83,12 +84,20 @@ G2 = load_tsv(a.google2)
 META = load(a.meta)
 MST = load_tsv(a.ms_tsv)
 MSS = load(a.ms_sheet) if a.ms_sheet else None
+# The Tracker_2025 sheet (msads_weekly_cost) is retired as a Microsoft source (2026-10-24). Only an --ms-sheet file that
+# came from the Microsoft Ads API (msads_weekly_account, "source": "microsoft_ads_api") is used; a sheet file is
+# ignored so it can't overwrite API numbers, and those weeks keep their previous values.
+MS_SHEET_IGNORED = MSS is not None and dig(MSS, "source") != "microsoft_ads_api"
+if MS_SHEET_IGNORED:
+    MSS = None
 failed = []
 if G is None or W is None: failed.append("google/whatconverts error — no weeks written")
 if a.funnel and FN is None: failed.append("funnel (ad-attributed leads/jobs) error — funnel values left as previous value")
 if a.google2 is not None and G2 is None: failed.append("Google 2nd account error — its spend left as previous value")
 if a.meta is not None and META is None: failed.append("Meta Ads error — Meta spend left as previous value")
-if MST is None and (a.ms_sheet is None or MSS is None):
+if MS_SHEET_IGNORED and MST is None:
+    failed.append("Microsoft: retired Tracker sheet input ignored — Microsoft values kept; the Monday keyword refresh fills them from the API")
+elif MST is None and (a.ms_sheet is None or MSS is None):
     failed.append("Microsoft Ads error — Microsoft spend left as previous value")
 
 g = {r["segments"]["week"]: (round(int(r["metrics"].get("costMicros", 0)) / 1e6, 2), int(r["metrics"].get("clicks", 0)),
