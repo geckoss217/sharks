@@ -71,7 +71,28 @@ def monday(d):
     d = datetime.date.fromisoformat(d[:10]); return (d - datetime.timedelta(days=d.weekday())).isoformat()
 
 a = parse_args(sys.argv[1:])
+LEGACY = bool(sys.argv[1:]) and not sys.argv[1].startswith("--")
 s = open(a.cur).read(); A = json.loads(s[s.index("{"):s.rindex("}") + 1])
+if LEGACY:
+    # The old Monday task (positional args) still runs after the all-accounts task. If that task already
+    # refreshed these weeks, leave the file exactly as it is so the old run can't drop Google 2nd / Meta / Microsoft updates.
+    try:
+        _g = json.load(open(a.google)); _wk = []
+        def _walk(o):
+            if isinstance(o, dict):
+                if "segments" in o and isinstance(o["segments"], dict) and "week" in o["segments"]: _wk.append(o["segments"]["week"])
+                for v in o.values(): _walk(v)
+            elif isinstance(o, list):
+                for v in o: _walk(v)
+        _walk(_g)
+        if _wk and A.get("AS_OF", "") >= max(_wk):
+            open(a.out, "w").write(s)
+            print("weeks:", len(A["WEEKS"]), "as_of:", A["AS_OF"], "updated: [] (already refreshed by the all-accounts task)", "failed:", A.get("FAILED", []))
+            sys.exit(0)
+    except SystemExit:
+        raise
+    except Exception:
+        pass
 if A["COLS"] != COLS:                      # upgrade older files
     old = A["COLS"]
     A["WEEKS"] = [[dict(zip(old, w)).get(c) for c in COLS] for w in A["WEEKS"]]
