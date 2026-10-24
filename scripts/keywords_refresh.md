@@ -46,14 +46,22 @@ b) immediately code_action_microsoftadvertisingcliapi__msads_zip_to_tsv {"downlo
 - pull/ms_st.tsv: TYPE search, CLICKS true
 Sanity check: ms_camp weekly Spend equals data/ads.js ms_spend for the same week.
 
+## 1c. Meta ads — Zapier FacebookLeadAdsCLIAPI / code_action_facebookleadadscliapi__meta_insights_tsv
+Params {"account_id": "1183225860616181", "start_date": "START", "end_date": "END"} -> pull/meta_ads.tsv (decode like the Google files).
+Ad-level weekly spend, clicks, impressions and Meta-reported leads; the scorecard shows one row per ad set.
+(The second Meta ad account 1481310957196889 had no spend through Oct 2026; add it as meta_ads_2.tsv if it starts spending.)
+
 ## 2. WhatConverts — Zapier action WhatConvertsCLIAPI / code_action_whatconvertscliapi__paid_keyword_weekly
 Params: {"start_date": "START", "end_date": "END", "lookback_days": 30}. Save the inner data object
 ({"summary":…, "rows":…}) to pull/wc_1.json. Check with python: per platform, the row sums of leads, quotable,
 jobs, revenue and cancelled equal the summary. If the call errors, retry once, then split the range in half (wc_1, wc_2).
 
+Also WhatConvertsCLIAPI / code_action_whatconvertscliapi__paid_meta_weekly {"start_date": "START", "end_date": "END"}
+-> pull/wcm_1.json (inner {summary, source_medium_pairs, rows}); same row-sum check against the summary.
+
 ## 3. Build
 - pull/ranges.json: {"g_kw": ["START","END"], "g_camp": [...], "g_st": [...], "g2_kw": [...], "g2_camp": [...], "g2_st": [...],
-  "ms_kw": [...], "ms_camp": [...], "ms_st": [...], "wc": [...]}
+  "ms_kw": [...], "ms_camp": [...], "ms_st": [...], "meta_ads": [...], "wc": [...], "wcm": [...]}
   Only list a source whose files are present and verified; a listed source REPLACES those weeks for that account only.
 - `python3 sharks/scripts/keywords_build.py --live sharks/data/keywords --raw pull --dims dims --names sharks/data/keywords/campaign-names.json --out sharks/data/keywords --today TODAY`
   It prints CHANGED: lines. A new quarter rolls the old recent.js into q-YYYYQn.js automatically.
@@ -69,4 +77,4 @@ jobs, revenue and cancelled equal the summary. If the call errors, retry once, t
 - Verify: fetch https://sharks.emergencycleanings.com/data/keywords/manifest.js and check dataThrough = END.
 
 ## 5. Report (bullets only, 3–5 lines)
-Weeks refreshed, newest week's spend (Google both accounts, Microsoft) + paid leads + jobs, anything that failed.
+Weeks refreshed, newest week's spend (Google both accounts, Microsoft, Meta) + paid leads + jobs, anything that failed.

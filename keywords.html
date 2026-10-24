@@ -365,7 +365,7 @@ function rowKw(gk, g, c, Wfirst) {
   const camps = [...g.camps];
   const r = {
     id: gk, g, text: g.text, hasSpend: g.hasSpend,
-    name: S.grp === 'c' ? campInfo(g.p, g.cid)[0] : (g.text === '' ? '(no keyword)' : (g.label || g.text)),
+    name: S.grp === 'c' ? campInfo(g.p, g.cid)[0] : (g.text === '' ? (g.p === 'm' ? '(no ad set)' : '(no keyword)') : (g.label || g.text)),
     match: g.mt, camp: S.grp === 'c' ? '' : (camps.length === 1 ? campInfo(...camps[0].split('\t'))[0] : camps.length + ' campaigns'),
     src: [...g.srcs].map(s => SRC_LABEL[s] || s).join(', '),
     status: info ? info[0] : null,
@@ -469,7 +469,7 @@ function renderTiles(G, Cg, W, C) {
     ['Quotable', fmtN(t.quot), (fmtP(div(t.quot, t.leads)) + ' of leads ') + (c ? chgHtml(t.quot, c.quot, 1) : '')],
     ['Booked jobs', fmtN(t.jobs), cv('jobs', 1)],
     ['Revenue', fmt$(t.rev), cv('rev', 1)],
-    ['Leads with a keyword', fmtP(div(t.kwLeads, t.leads)), `${fmtN(t.kwLeads)} of ${fmtN(t.leads)} · jobs ${fmtN(t.kwJobs)} of ${fmtN(t.jobs)}`],
+    ['Leads matched to a keyword or ad set', fmtP(div(t.kwLeads, t.leads)), `${fmtN(t.kwLeads)} of ${fmtN(t.leads)} · jobs ${fmtN(t.kwJobs)} of ${fmtN(t.jobs)}`],
   ];
   tiles.splice(4, 0, ['Cost / quotable', fmt$c(div(t.spend, t.quot)), c ? chgHtml(div(t.spend, t.quot), div(c.spend, c.quot), -1) : '']);
   $('tiles').innerHTML = tiles.map(([l, v, s]) => `<div class="tile"><div class="t-label">${l}</div><div class="t-value">${v}</div><div class="t-sub">${s || '&nbsp;'}</div></div>`).join('');
