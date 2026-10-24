@@ -1,26 +1,43 @@
-# Weekly Ads Scorecard merge step. Usage:
-#   python3 ads_update.py CURRENT_ads.js google.json wc.json ms.json funnel.json OUT_ads.js
-# google.json = raw Zapier GoogleAdsCLIAPI create_report response (customer, segments.week, cost_micros, clicks, impressions)
-# wc.json     = raw Zapier WhatConverts weekly_ads_scorecard response
-# ms.json     = raw Zapier MicrosoftAdvertisingCLIAPI msads_weekly_account response (preferred), or the old Google Sheets
-#               msads_weekly_cost response. A week that already holds Microsoft Ads API numbers (ms_impr set) is never
-#               overwritten by the sheet; scripts/ads_ms_update.py (run by the Monday keyword refresh) fills new weeks from the API.
-# funnel.json = raw Zapier WhatConverts weekly_ads_funnel response (ad-attributed leads/quotable/jobs/revenue per platform)
-# Replaces/adds each week that is present in BOTH google and wc results. Never writes a week whose source errored.
-import json, sys, datetime, zoneinfo
-if len(sys.argv) == 6:   # old 5-arg form: no funnel file
-    cur, gf, wf, mf, outf = sys.argv[1:6]; ff = None
-else:
-    cur, gf, wf, mf, ff, outf = sys.argv[1:7]
-s = open(cur).read(); A = json.loads(s[s.index('{'):s.rindex('}')+1])
+# Weekly Ads Scorecard merge step.
+#
+# Usage (current):
+#   python3 ads_update.py --cur cur.js --google google.json --wc wc.json --funnel funnel.json \
+#       --google2 g2.tsv --meta meta.json --ms-tsv ms_camp.tsv [--ms-sheet ms.json] --out ads.js
+# Legacy positional forms still work:
+#   python3 ads_update.py CUR google.json wc.json ms.json OUT
+#   python3 ads_update.py CUR google.json wc.json ms.json funnel.json OUT
+#
+# Inputs (all raw Zapier responses unless noted):
+#   --google   GoogleAdsCLIAPI create_report, main account 2998752313 (customer, segments.week, cost_micros, clicks, impressions)
+#   --wc       WhatConverts weekly_ads_scorecard
+#   --funnel   WhatConverts weekly_ads_funnel (buckets google = all Google paid, google2 = 2nd account campaigns, bing, facebook)
+#   --google2  decoded TSV from GoogleAdsCLIAPI gaql_export_tsv, customer 3438697076:
+#              SELECT segments.week, metrics.cost_micros, metrics.clicks, metrics.impressions FROM customer WHERE ...
+#              (a .json raw response with a "tsv" field also works)
+#   --meta     FacebookLeadAdsCLIAPI meta_weekly_insights (all ad accounts are summed)
+#   --ms-tsv   decoded TSV from MicrosoftAdvertisingCLIAPI msads_report_submit (campaign) + msads_zip_to_tsv
+#   --ms-sheet GoogleSheetsV2CLIAPI msads_weekly_cost (fallback for Microsoft spend/clicks when --ms-tsv is missing)
+#
+# Replaces/adds each week present in BOTH the main Google and WhatConverts results. A source that errored or
+# was not supplied keeps its previous values for that week, and an error is recorded in FAILED.
+import json, sys, csv, io, datetime, zoneinfo, argparse
+
 BASE = ["week","g_spend","g_clicks","ms_spend","ms_clicks","ms_days","leads","quotable","q_google","q_bing","leads_google","leads_bing","wrong_number","low_budget","tbd_stage","jobs","revenue","cancelled"]
 EXTRA = ["g_impr","ms_impr","gl","gq","gj","grev","bl","bq","bj","brev"]
-COLS = BASE + EXTRA
-# upgrade older files that don't have the funnel columns yet
-if A['COLS'] != COLS:
-    old = A['COLS']
-    A['WEEKS'] = [[dict(zip(old, w)).get(c) for c in COLS] for w in A['WEEKS']]
-    A['COLS'] = COLS
+EXTRA2 = ["g2_spend","g2_clicks","g2_impr","fb_spend","fb_clicks","fb_lclicks","fb_impr","g2l","g2q","g2j","g2rev","fl","fq","fj","frev"]
+COLS = BASE + EXTRA + EXTRA2
+
+def parse_args(argv):
+    if argv and not argv[0].startswith("--"):
+        a = argparse.Namespace(google2=None, meta=None, ms_tsv=None, funnel=None)
+        if len(argv) == 5: a.cur, a.google, a.wc, a.ms_sheet, a.out = argv
+        else: a.cur, a.google, a.wc, a.ms_sheet, a.funnel, a.out = argv[:6]
+        return a
+    p = argparse.ArgumentParser()
+    for k in ("cur", "google", "wc", "out"): p.add_argument("--" + k, required=True)
+    for k in ("funnel", "google2", "meta", "ms-tsv", "ms-sheet"): p.add_argument("--" + k)
+    return p.parse_args(argv)
+
 def dig(o, key):
     if isinstance(o, dict):
         if key in o: return o[key]
@@ -32,43 +49,108 @@ def dig(o, key):
             r = dig(v, key)
             if r is not None: return r
     return None
+
 def load(f):
     if not f: return None
-    o = json.load(open(f))
-    if o.get('isError') or dig(o, 'success') is False: return None
+    try: o = json.load(open(f))
+    except Exception: return None
+    if o.get("isError") or dig(o, "success") is False: return None
     return o
-G, W, M, FN = load(gf), load(wf), load(mf), load(ff)
-failed = []
-if G is None or W is None: failed.append('google/whatconverts error — no weeks written')
-g = {r['segments']['week']: (round(int(r['metrics'].get('costMicros', 0))/1e6, 2), int(r['metrics'].get('clicks', 0)),
-     int(r['metrics']['impressions']) if 'impressions' in r['metrics'] else None) for r in (dig(G, 'report') or [])} if G else {}
-w = {r['week_start']: r for r in (dig(W, 'weeks') or [])} if W else {}
-m = {r['week_start']: r for r in (dig(M, 'weeks') or [])} if M else {}
-fn = {r['week_start']: r for r in (dig(FN, 'weeks') or [])} if FN else {}
-if M is None: failed.append('microsoft data error — Microsoft spend left as previous value')
-if FN is None and ff: failed.append('funnel (ad-attributed leads/jobs) error — funnel values left as previous value')
-rows = {r[0]: r for r in A['WEEKS']}
+
+def load_tsv(f):
+    if not f: return None
+    try: txt = open(f).read()
+    except Exception: return None
+    if txt.lstrip().startswith("{"):
+        o = load(f); txt = dig(o, "tsv") if o else None
+        if not txt: return None
+    return list(csv.DictReader(io.StringIO(txt), delimiter="\t"))
+
+def monday(d):
+    d = datetime.date.fromisoformat(d[:10]); return (d - datetime.timedelta(days=d.weekday())).isoformat()
+
+a = parse_args(sys.argv[1:])
+s = open(a.cur).read(); A = json.loads(s[s.index("{"):s.rindex("}") + 1])
+if A["COLS"] != COLS:                      # upgrade older files
+    old = A["COLS"]
+    A["WEEKS"] = [[dict(zip(old, w)).get(c) for c in COLS] for w in A["WEEKS"]]
+    A["COLS"] = COLS
 I = {c: i for i, c in enumerate(COLS)}
-for wk in sorted(set(g) & set(w)):
-    x = w[wk]; old = rows.get(wk)
-    api_ms = old is not None and old[I['ms_impr']] is not None and (M is None or dig(M, 'source') != 'microsoft_ads_api')
-    if wk in m and not api_ms:
-        ms = [round(float(m[wk]['cost']), 2), int(m[wk]['clicks']), int(m[wk]['days'])]
-        ms_impr = None if m[wk].get('impressions') is None else int(m[wk]['impressions'])
-    elif old: ms = old[3:6]; ms_impr = old[I['ms_impr']]
-    else: ms = [0.0, 0, 0]; ms_impr = None
-    g_impr = g[wk][2] if g[wk][2] is not None else (old[I['g_impr']] if old else None)
+
+G, W = load(a.google), load(a.wc)
+FN = load(a.funnel)
+G2 = load_tsv(a.google2)
+META = load(a.meta)
+MST = load_tsv(a.ms_tsv)
+MSS = load(a.ms_sheet) if a.ms_sheet else None
+failed = []
+if G is None or W is None: failed.append("google/whatconverts error — no weeks written")
+if a.funnel and FN is None: failed.append("funnel (ad-attributed leads/jobs) error — funnel values left as previous value")
+if a.google2 is not None and G2 is None: failed.append("Google 2nd account error — its spend left as previous value")
+if a.meta is not None and META is None: failed.append("Meta Ads error — Meta spend left as previous value")
+if MST is None and (a.ms_sheet is None or MSS is None):
+    failed.append("Microsoft Ads error — Microsoft spend left as previous value")
+
+g = {r["segments"]["week"]: (round(int(r["metrics"].get("costMicros", 0)) / 1e6, 2), int(r["metrics"].get("clicks", 0)),
+     int(r["metrics"]["impressions"]) if "impressions" in r["metrics"] else None) for r in (dig(G, "report") or [])} if G else {}
+w = {r["week_start"]: r for r in (dig(W, "weeks") or [])} if W else {}
+fn = {r["week_start"]: r for r in (dig(FN, "weeks") or [])} if FN else {}
+g2 = {}
+for r in G2 or []:
+    x = g2.setdefault(r["segments.week"], [0.0, 0, 0])
+    x[0] += int(r["metrics.cost_micros"] or 0) / 1e6; x[1] += int(r["metrics.clicks"] or 0); x[2] += int(r["metrics.impressions"] or 0)
+fb = {}
+for r in (dig(META, "weeks") or []) if META else []:
+    x = fb.setdefault(r["week_start"], [0.0, 0, 0, 0])
+    x[0] += float(r.get("spend") or 0); x[1] += int(r.get("clicks") or 0); x[2] += int(r.get("link_clicks") or 0); x[3] += int(r.get("impressions") or 0)
+ms = {}
+if MST is not None:
+    days = {}
+    for r in MST:
+        wk = monday(r["TimePeriod"]); x = ms.setdefault(wk, [0.0, 0, 0])
+        x[0] += float(r.get("Spend") or 0); x[1] += int(float(r.get("Clicks") or 0)); x[2] += int(float(r.get("Impressions") or 0))
+        days.setdefault(wk, set()).add(r["TimePeriod"][:10])
+    ms = {k: [round(v[0], 2), v[1], len(days[k]), v[2]] for k, v in ms.items()}
+elif MSS is not None:
+    ms = {r["week_start"]: [round(float(r["cost"]), 2), int(r["clicks"]), int(r["days"]),
+          None if r.get("impressions") is None else int(r["impressions"])] for r in (dig(MSS, "weeks") or [])}
+
+def bucket(f, k):
+    z = {"leads": 0, "quotable": 0, "jobs": 0, "revenue": 0}
+    b = f.get(k) or z
+    return [int(b["leads"]), int(b["quotable"]), int(b["jobs"]), round(float(b["revenue"]), 2)]
+
+rows = {r[0]: r for r in A["WEEKS"]}
+updated = sorted(set(g) & set(w))
+for wk in updated:
+    x = w[wk]; old = rows.get(wk) or [None] * len(COLS)
+    new = [wk, g[wk][0], g[wk][1]]
+    # Microsoft: API report covers every week in the requested range (missing week = no spend)
+    if MST is not None: m = ms.get(wk, [0.0, 0, 0, 0])
+    elif MSS is not None and wk in ms: m = ms[wk]
+    else: m = [old[I["ms_spend"]] or 0.0, old[I["ms_clicks"]] or 0, old[I["ms_days"]] or 0, old[I["ms_impr"]]]
+    new += m[:3]
+    new += [int(x[k]) for k in ["leads","quotable_yes","quotable_google","quotable_bing","leads_google_cpc","leads_bing_cpc","wrong_number","low_budget","tbd_stage","jobs"]]
+    new += [round(float(x["revenue"]), 2), int(x["cancelled"])]
+    g_impr = g[wk][2] if g[wk][2] is not None else old[I["g_impr"]]
+    new += [g_impr, m[3]]
     if FN is not None:
-        z = {'leads': 0, 'quotable': 0, 'jobs': 0, 'revenue': 0}
-        f = fn.get(wk, {}); fg = f.get('google') or z; fb = f.get('bing') or z
-        funnel = [int(fg['leads']), int(fg['quotable']), int(fg['jobs']), round(float(fg['revenue']), 2),
-                  int(fb['leads']), int(fb['quotable']), int(fb['jobs']), round(float(fb['revenue']), 2)]
-    elif old: funnel = old[I['gl']:I['brev']+1]
-    else: funnel = [None]*8
-    rows[wk] = [wk, g[wk][0], g[wk][1]] + ms + [int(x[k]) for k in ['leads','quotable_yes','quotable_google','quotable_bing','leads_google_cpc','leads_bing_cpc','wrong_number','low_budget','tbd_stage','jobs']] + [round(float(x['revenue']), 2), int(x['cancelled'])] + [g_impr, ms_impr] + funnel
-A['WEEKS'] = [rows[k] for k in sorted(rows)]
-A['AS_OF'] = A['WEEKS'][-1][0]
-A['GEN'] = datetime.datetime.now(zoneinfo.ZoneInfo('America/Denver')).strftime('%b %-d, %-I:%M %p MT')
-A['FAILED'] = failed
-open(outf, 'w').write('window.ADS=' + json.dumps(A, separators=(',', ':')) + ';\n')
-print('weeks:', len(A['WEEKS']), 'as_of:', A['AS_OF'], 'updated:', sorted(set(g) & set(w)), 'failed:', failed)
+        f = fn.get(wk, {})
+        new += bucket(f, "google") + bucket(f, "bing")
+        ext_leads = bucket(f, "google2") + bucket(f, "facebook")
+    else:
+        new += old[I["gl"]:I["brev"] + 1]
+        ext_leads = old[I["g2l"]:I["g2rev"] + 1] + old[I["fl"]:I["frev"] + 1]
+    if G2 is not None: v = g2.get(wk, [0.0, 0, 0]); new += [round(v[0], 2), v[1], v[2]]
+    else: new += old[I["g2_spend"]:I["g2_impr"] + 1]
+    if META is not None: v = fb.get(wk, [0.0, 0, 0, 0]); new += [round(v[0], 2), v[1], v[2], v[3]]
+    else: new += old[I["fb_spend"]:I["fb_impr"] + 1]
+    new += ext_leads
+    assert len(new) == len(COLS), (len(new), len(COLS))
+    rows[wk] = new
+A["WEEKS"] = [rows[k] for k in sorted(rows)]
+A["AS_OF"] = A["WEEKS"][-1][0]
+A["GEN"] = datetime.datetime.now(zoneinfo.ZoneInfo("America/Denver")).strftime("%b %-d, %-I:%M %p MT")
+A["FAILED"] = failed
+open(a.out, "w").write("window.ADS=" + json.dumps(A, separators=(",", ":")) + ";\n")
+print("weeks:", len(A["WEEKS"]), "as_of:", A["AS_OF"], "updated:", updated, "failed:", failed)
