@@ -7,11 +7,10 @@ src, sha, out = sys.argv[1:4]
 raw = open(src).read().strip().replace("\n", "").replace(" ", "")
 import re
 def b64(x):
-    try:
-        return base64.b64decode(x)
-    except Exception:
-        # blob arrived as several separately padded base64 chunks
+    # the blob can arrive as several separately padded base64 chunks joined together
+    if re.search(r"=[A-Za-z0-9+/]", x):
         return b"".join(base64.b64decode(c) for c in re.findall(r"[A-Za-z0-9+/]+={0,2}", x))
+    return base64.b64decode(x)
 try:
     t = zlib.decompress(b64(raw))
 except Exception as e:
