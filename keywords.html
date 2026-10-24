@@ -138,7 +138,7 @@
 
   <div class="controls">
     <div class="ctl"><span class="lbl">Source</span>
-      <div class="seg" id="c-src"><button data-v="all" class="on">All paid search</button><button data-v="main">Google (main)</button><button data-v="secondary">Google (2nd acct)</button><button data-v="microsoft">Microsoft</button></div></div>
+      <div class="seg" id="c-src"><button data-v="all" class="on">All paid search</button><button data-v="google">Google (both)</button><button data-v="main">Google (main)</button><button data-v="secondary">Google (2nd acct)</button><button data-v="microsoft">Microsoft</button><button data-v="meta">Meta</button></div></div>
     <div class="ctl"><span class="lbl">Period</span>
       <div class="seg" id="c-per"><button data-v="4">4 wks</button><button data-v="13" class="on">13 wks</button><button data-v="26">26 wks</button><button data-v="52">52 wks</button><button data-v="ytd">YTD</button><button data-v="all">All</button></div></div>
     <div class="ctl"><span class="lbl">Weeks</span>
@@ -178,12 +178,13 @@
   <div class="panel tblwrap"><table id="tbl"></table><div class="more" id="more"></div></div>
 
   <ul class="notes">
-    <li>Spend, impressions, clicks, Google conversions, Quality Score and search terms come from the main Google Ads account (299-875-2313) through the Google Ads API. The second Google account and Microsoft Ads aren't connected for spend yet, so their spend columns show “—”.</li>
-    <li>Leads, quotable leads, booked jobs and revenue come from WhatConverts paid search leads (google or bing, cpc), for every account. Transactions and appointments aren't counted as leads. WhatConverts has no leads before Apr 1, 2025 and no transactions before Sept 25, 2025, so leads and jobs are blank before those dates.</li>
+    <li>Spend, impressions, clicks, platform conversions and search terms come from both Google Ads accounts (main 299-875-2313 and EC - Local Service Ads 343-869-7076) through the Google Ads API, and from Microsoft Ads through its reporting API. Quality Score and keyword status are Google only. “Google (both)” also includes Google leads that arrive with no campaign.</li>
+    <li>Meta ads have no keywords, so each Meta ad set is a row (spend, clicks and Meta-reported leads from the Meta ads API). WhatConverts Meta leads join to the ad set id they carry.</li>
+    <li>Leads, quotable leads, booked jobs and revenue come from WhatConverts paid leads (google, bing or facebook, cpc), for every account. Transactions and appointments aren't counted as leads. WhatConverts has no leads before Apr 1, 2025 and no transactions before Sept 25, 2025, so leads and jobs are blank before those dates.</li>
     <li>A booked job gets the keyword WhatConverts stored on the job. When the job has none, it takes the keyword of the most recent paid lead from the same phone or email. Jobs with neither land on “(no keyword)” under their campaign. Jobs count in the week they were booked; cancelled jobs are excluded.</li>
     <li>About 40% of Google paid leads arrive in WhatConverts with no keyword and no campaign. They show as “(no keyword)” so the totals still match the Ads Scorecard funnel. Spend from campaigns that don't run on keywords (Performance Max, dynamic search ads) also shows on a “(no keyword)” row under its campaign. Calls to EC's internal test numbers are left out.</li>
     <li>Leads join to keywords on campaign + keyword text, so a keyword running as both Exact and Phrase in one campaign is one row (match types shown as chips). Group by Keyword to combine a keyword across campaigns and platforms.</li>
-    <li>Search terms list only terms that got at least one click. “Add as keyword” = the term converted in Google Ads and isn't a keyword yet. “Negative?” = $100+ spend, no Google conversions, and the term isn't itself one of your keywords. “Already negative” = the exact term is on a negative list for that campaign. Both are prompts to review, not changes. Log any change in the Ads Change Log first.</li>
+    <li>Search terms list only terms that got at least one click. “Add as keyword” = the term converted in the ad platform and isn't a keyword yet. “Negative?” = $100+ spend, no platform conversions, and the term isn't itself one of your keywords. “Already negative” = the exact term is on a negative list for that campaign. Both are prompts to review, not changes. Log any change in the Ads Change Log first.</li>
     <li>Flags: “Spend, no leads” = $250+ spend and 0 leads. “Leads, no jobs” = 8+ leads and 0 booked jobs (only for ranges after Sept 22, 2025). “Low QS” = Quality Score 4 or lower. “Hold” = the campaign has an active hold in the Ads Change Log.</li>
     <li>Data refreshes every Monday morning. Column layout and view choices are saved in this browser only.</li>
   </ul>
@@ -217,7 +218,8 @@ const store = { get(k, d) { try { const v = localStorage.getItem('kw_' + k); ret
 const MTN = { 1: 'E', 2: 'P', 4: 'B' };
 const mtChips = m => [1, 2, 4].filter(b => m & b).map(b => `<span class="mt">${MTN[b]}</span>`).join('');
 const STMN = { E: 'Exact', e: 'Close variant (exact)', P: 'Phrase', p: 'Close variant (phrase)', B: 'Broad', '?': 'Other' };
-const SRC_LABEL = { main: 'Google', secondary: 'Google 2nd acct', microsoft: 'Microsoft', unknown: 'Unknown', other: 'Other' };
+const SRC_LABEL = { main: 'Google', secondary: 'Google 2nd acct', microsoft: 'Microsoft', meta: 'Meta', unknown: 'Unknown', other: 'Other' };
+const PDEF = { b: ['Microsoft campaign ', 'microsoft'], m: ['Meta campaign ', 'meta'], h: ['Google campaign ', 'secondary'], g: ['Google campaign ', 'other'] };
 const TH = { spendNoLead: 250, leadsNoJob: 8, lowQS: 4, negSpend: 100 };
 
 /* ---------- state ---------- */
@@ -242,7 +244,7 @@ const COLS = {
     { k: 'clicks', t: 'Clicks', f: fmtN },
     { k: 'ctr', t: 'CTR', f: fmtP },
     { k: 'cpc', t: 'Cost / click', f: fmt$c },
-    { k: 'gconv', t: 'Google conv.', f: v => fmtD(v, 1) },
+    { k: 'gconv', t: 'Platform conv.', f: v => fmtD(v, 1) },
     { k: 'leads', t: 'Leads', f: fmtN },
     { k: 'quot', t: 'Quotable', f: fmtN },
     { k: 'qrate', t: 'Quotable %', f: fmtP },
@@ -268,8 +270,8 @@ const COLS = {
     { k: 'clicks', t: 'Clicks', f: fmtN },
     { k: 'ctr', t: 'CTR', f: fmtP },
     { k: 'cpc', t: 'Cost / click', f: fmt$c },
-    { k: 'gconv', t: 'Google conv.', f: v => fmtD(v, 1) },
-    { k: 'cpa', t: 'Cost / Google conv.', f: fmt$c },
+    { k: 'gconv', t: 'Platform conv.', f: v => fmtD(v, 1) },
+    { k: 'cpa', t: 'Cost / platform conv.', f: fmt$c },
     { k: 'd_spend', t: 'Spend vs prior', cmp: 1 },
     { k: 'flags', t: 'Flags', l: 1 },
   ],
@@ -290,9 +292,9 @@ function visibleCols() {
 }
 
 /* ---------- aggregation ---------- */
-function campInfo(p, cid) { return (KW.man.camps[p + '\t' + cid] || [p === 'b' ? 'Microsoft campaign ' + cid : 'Campaign ' + cid, '', '', p === 'b' ? 'microsoft' : 'secondary']); }
-function srcOf(p, cid) { return campInfo(p, cid)[3] || (p === 'b' ? 'microsoft' : 'secondary'); }
-function inSrc(p, cid) { return S.src === 'all' || srcOf(p, cid) === S.src; }
+function campInfo(p, cid) { const d = PDEF[p] || PDEF.g; return KW.man.camps[p + '\t' + cid] || [d[0] + cid, '', '', d[1]]; }
+function srcOf(p, cid) { return campInfo(p, cid)[3] || (PDEF[p] || PDEF.g)[1]; }
+function inSrc(p, cid) { return S.src === 'all' || (S.src === 'google' ? (p === 'g' || p === 'h') : (S.src === 'meta' ? p === 'm' : srcOf(p, cid) === S.src)); }
 function groupKey(p, cid, text) {
   if (S.grp === 'k') return text;
   if (S.grp === 'c') return p + '\t' + cid;
@@ -359,7 +361,7 @@ function buildIndexes() {
   NEGS = new Map();
 }
 function rowKw(gk, g, c, Wfirst) {
-  const info = S.grp === 'kc' && g.p === 'g' ? (KW.man.info[gk] || null) : null;
+  const info = S.grp === 'kc' && (g.p === 'g' || g.p === 'h') ? (KW.man.info[gk] || null) : null;
   const camps = [...g.camps];
   const r = {
     id: gk, g, text: g.text, hasSpend: g.hasSpend,
@@ -368,10 +370,10 @@ function rowKw(gk, g, c, Wfirst) {
     src: [...g.srcs].map(s => SRC_LABEL[s] || s).join(', '),
     status: info ? info[0] : null,
     qs: info ? info[1] : null,
-    spend: g.hasSpend || [...g.srcs].includes('main') ? g.spend : null, clicks: g.hasSpend ? g.clicks : null, impr: g.hasSpend ? g.impr : null, gconv: g.hasSpend ? g.conv : null,
+    spend: g.hasSpend || g.srcs.has('main') || g.srcs.has('secondary') || g.srcs.has('microsoft') || g.srcs.has('meta') ? g.spend : null, clicks: g.hasSpend ? g.clicks : null, impr: g.hasSpend ? g.impr : null, gconv: g.hasSpend ? g.conv : null,
     leads: g.leads, quot: g.quot, jobs: g.jobs, rev: g.rev,
   };
-  const spendKnown = r.spend != null && !(g.srcs.has('secondary') || g.srcs.has('microsoft'));
+  const spendKnown = r.spend != null;
   r.ctr = r.clicks != null ? div(g.clicks, g.impr) : null;
   r.cpc = r.clicks != null ? div(g.spend, g.clicks) : null;
   r.qrate = div(g.quot, g.leads);
@@ -409,7 +411,7 @@ function rowSt(gk, g, c) {
 }
 function holdFor(campKeys) {
   if (!HOLDS.names.size && !HOLDS.account) return false;
-  return campKeys.some(ck => { const [p, cid] = ck.split('\t'); const i = campInfo(p, cid); if (i[3] !== 'main') return false; return HOLDS.account || HOLDS.names.has(String(i[0]).trim().toLowerCase()); });
+  return campKeys.some(ck => { const [p, cid] = ck.split('\t'); const i = campInfo(p, cid); if (i[3] !== 'main' && i[3] !== 'secondary') return false; return HOLDS.account || HOLDS.names.has(String(i[0]).trim().toLowerCase()); });
 }
 
 /* ---------- render ---------- */
@@ -419,6 +421,7 @@ async function render() {
   if (!W.length) return;
   $('tbl').innerHTML = ''; $('more').innerHTML = '<div class="loading">Loading…</div>';
   await loadFor(W.concat(C));
+  for (const F of Object.values(KW.files)) if (F.k && !F._kt) { F.k.forEach(k => { const t = k.split('\t')[2]; if (t) KWTEXTS.add(t); }); F._kt = 1; }
   if (S.tab === 'st' && !KW.files.neg) { try { await loadScript(BASE + 'neg.js?v=' + encodeURIComponent(KW.man.asOf)); NEGS = new Map(Object.entries(KW.files.neg.neg).map(([c, l]) => [c, new Set(l)])); } catch (e) {} }
   const Wset = new Set(W), Cset = new Set(C);
   const cur = S.tab === 'kw' ? aggKw(Wset) : aggSt(Wset);
@@ -456,8 +459,8 @@ function chgHtml(a, b, goodDir) {
 }
 function renderTiles(G, Cg, W, C) {
   const t = sumAll(G), c = Cg ? sumAll(Cg) : null;
-  const spendNote = S.src === 'secondary' || S.src === 'microsoft' ? 'not connected' : (S.src === 'all' ? 'main Google account' : '');
-  const showSpend = !(S.src === 'secondary' || S.src === 'microsoft');
+  const spendNote = '';
+  const showSpend = true;
   const cv = (k, d) => c ? chgHtml(t[k], c[k], d) + ' vs ' + (S.cmp === 'ly' ? 'last year' : 'prior') : '';
   const tiles = [
     ['Spend', showSpend ? fmt$(t.spend) : '—', showSpend ? cv('spend', -1) || spendNote : spendNote],
@@ -468,7 +471,7 @@ function renderTiles(G, Cg, W, C) {
     ['Revenue', fmt$(t.rev), cv('rev', 1)],
     ['Leads with a keyword', fmtP(div(t.kwLeads, t.leads)), `${fmtN(t.kwLeads)} of ${fmtN(t.leads)} · jobs ${fmtN(t.kwJobs)} of ${fmtN(t.jobs)}`],
   ];
-  if (S.src === 'main') tiles.splice(4, 0, ['Cost / quotable', fmt$c(div(t.spend, t.quot)), c ? chgHtml(div(t.spend, t.quot), div(c.spend, c.quot), -1) : '']);
+  tiles.splice(4, 0, ['Cost / quotable', fmt$c(div(t.spend, t.quot)), c ? chgHtml(div(t.spend, t.quot), div(c.spend, c.quot), -1) : '']);
   $('tiles').innerHTML = tiles.map(([l, v, s]) => `<div class="tile"><div class="t-label">${l}</div><div class="t-value">${v}</div><div class="t-sub">${s || '&nbsp;'}</div></div>`).join('');
 }
 function renderStory(rows) {
@@ -528,14 +531,14 @@ function renderTable() {
   const cols = visibleCols(), [sk, sd] = S.sort[S.tab] || ['spend', -1];
   let rows = filtered();
   rows.sort((a, b) => { const x = sortVal(a, sk), y = sortVal(b, sk); if (x == null && y == null) return 0; if (x == null) return 1; if (y == null) return -1; return (typeof x === 'string' ? x.localeCompare(y) : x - y) * sd || (b.spend || 0) - (a.spend || 0) || (b.leads || 0) - (a.leads || 0); });
-  const title = c => c.k === 'name' && S.tab === 'kw' ? (S.grp === 'c' ? 'Campaign' : 'Keyword') : c.t;
+  const title = c => c.k === 'name' && S.tab === 'kw' ? (S.grp === 'c' ? 'Campaign' : (S.src === 'meta' ? 'Ad set' : 'Keyword / Meta ad set')) : c.t;
   const head = '<thead><tr>' + cols.map(c => `<th class="${c.l ? 'l' : ''}${c.k === sk ? ' sorted' : ''}" data-k="${c.k}">${title(c)}${c.k === sk ? ` <span class="ar">${sd > 0 ? '▲' : '▼'}</span>` : ''}</th>`).join('') + '</tr></thead>';
   // totals row
   const T = rows.reduce((t, r) => { for (const k of ['spend', 'clicks', 'impr', 'gconv', 'leads', 'quot', 'jobs', 'rev']) t[k] = (t[k] || 0) + (r[k] || 0); return t; }, {});
   const anySpend = rows.some(r => r.spend != null);
   const totRow = { name: `Total · ${rows.length.toLocaleString()} rows`, spend: anySpend ? T.spend : null, clicks: anySpend ? T.clicks : null, impr: anySpend ? T.impr : null, gconv: anySpend ? T.gconv : null,
     leads: T.leads, quot: T.quot, jobs: T.jobs, rev: T.rev, ctr: div(T.clicks, T.impr), cpc: div(T.spend, T.clicks), qrate: div(T.quot, T.leads), cpa: div(T.spend, T.gconv), flags: [] };
-  if (S.src === 'main') { totRow.cpl = div(T.spend, T.leads); totRow.cpq = div(T.spend, T.quot); totRow.cpj = div(T.spend, T.jobs); totRow.roas = T.spend ? T.rev / T.spend : null; }
+  { totRow.cpl = div(T.spend, T.leads); totRow.cpq = div(T.spend, T.quot); totRow.cpj = div(T.spend, T.jobs); totRow.roas = T.spend ? T.rev / T.spend : null; }
   const totHtml = '<tr class="tot">' + cols.map(c => {
     if (c.k === 'name') return `<td class="l">${esc(totRow.name)}</td>`;
     if (c.l || c.cmp || c.k === 'qs') return '<td></td>';
@@ -573,12 +576,12 @@ function detailRow(r, span) {
       const m = terms.get(t) || { spend: 0, clicks: 0, conv: 0 }; m.spend += x[4] / 100; m.clicks += x[5]; m.conv += x[7] / 100; terms.set(t, m);
     }
   }
-  const chart = barChart(series, S.tab === 'kw' ? 'Leads' : 'Google conv.');
+  const chart = barChart(series, S.tab === 'kw' ? 'Leads' : 'Platform conv.');
   let right = '';
   if (S.tab === 'kw') {
     const list = [...terms].sort((a, b) => b[1].spend - a[1].spend).slice(0, 12);
-    right = `<h4>Top search terms (${list.length ? 'by spend' : 'none with clicks'})</h4>` + (list.length ? `<table><thead><tr><th class="l">Term</th><th>Spend</th><th>Clicks</th><th>Google conv.</th></tr></thead><tbody>` +
-      list.map(([t, m]) => `<tr><td class="l">${esc(t)}</td><td>${fmt$(m.spend)}</td><td>${fmtN(m.clicks)}</td><td>${fmtD(m.conv, 1)}</td></tr>`).join('') + '</tbody></table>' : '<div class="hint">Search terms exist for the main Google account only.</div>');
+    right = `<h4>Top search terms (${list.length ? 'by spend' : 'none with clicks'})</h4>` + (list.length ? `<table><thead><tr><th class="l">Term</th><th>Spend</th><th>Clicks</th><th>Platform conv.</th></tr></thead><tbody>` +
+      list.map(([t, m]) => `<tr><td class="l">${esc(t)}</td><td>${fmt$(m.spend)}</td><td>${fmtN(m.clicks)}</td><td>${fmtD(m.conv, 1)}</td></tr>`).join('') + '</tbody></table>' : '<div class="hint">No search terms with clicks for this keyword in this range.</div>');
     const info = KW.man.info[r.id];
     if (info && info[3] && info[3].length) right += `<div class="hint" style="margin-top:8px">Ad groups: ${info[3].map(esc).join(', ')}</div>`;
   } else {

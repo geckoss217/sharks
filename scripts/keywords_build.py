@@ -4,13 +4,15 @@
 Inputs (all optional except at least one --raw dir):
   --raw DIR [DIR ...]   pull folders. Each holds any of:
         ranges.json   {"g_kw": [...], "g_camp": [...], "g_st": [...], "g2_kw": [...], "g2_camp": [...], "g2_st": [...],
-                       "ms_kw": [...], "ms_camp": [...], "ms_st": [...], "wc": [...]}
+                       "ms_kw": [...], "ms_camp": [...], "ms_st": [...], "meta_ads": [...], "wc": [...], "wcm": [...]}
                       date span each source covered. Weeks inside a span are REPLACED by the
                       new pull (so a week with no rows is cleared, not left stale).
         g_kw*.tsv / g2_kw*.tsv       keyword_view exports (main / 2nd Google account)
         g_camp*.tsv / g2_camp*.tsv   campaign weekly totals
         g_st*.tsv / g2_st*.tsv       search_term_view exports
         ms_kw*.tsv / ms_camp*.tsv / ms_st*.tsv   Microsoft Ads weekly reports (msads_zip_to_tsv)
+        meta_ads*.tsv                Meta ad-level weekly insights (meta_insights_tsv); keyword = ad set
+        wcm*.json                    WhatConverts paid Meta leads (paid_meta_weekly)
         wc*.json      WhatConvertsCLIAPI paid_keyword_weekly results ({summary, rows})
   --dims DIR            Google settings: g_ / g2_ kwdims*.tsv, campaigns.tsv, negatives.tsv, campneg.tsv
   --names FILE          JSON {"b|<id>": "name", "g|<id>": "name"} for campaigns Google can't name
@@ -21,7 +23,8 @@ Inputs (all optional except at least one --raw dir):
 Model: everything is weekly (Monday start). A week belongs to the quarter of its Thursday.
 Completed quarters -> q-YYYYQn.js, the latest quarter -> recent.js, plus manifest.js.
 Keys: "<p>\t<campaignId>\t<keyword lowercased>"; p = g (Google main account 299-875-2313),
-h (Google 2nd account 343-869-7076, files g2_*) or b (Microsoft Ads account 187103199, files ms_*).
+h (Google 2nd account 343-869-7076, files g2_*), b (Microsoft Ads account 187103199, files ms_*)
+or m (Meta ads; the third part of the key is the ad set id instead of a keyword).
 Spend comes from the two Google Ads accounts and Microsoft Ads. Leads, quotable leads, jobs and revenue come from
 WhatConverts paid leads (google|bing cpc); a google lead whose campaign belongs to the 2nd account gets p = h.
 No names, phone numbers or emails are written.
@@ -89,9 +92,12 @@ class Store:
         self.kw = defaultdict(dict)    # week -> key -> [cost_cents, clicks, impr, conv100, matchmask]
         self.st = defaultdict(dict)    # week -> (key, term, stmatch) -> [cost_cents, clicks, impr, conv100]
         self.wc = defaultdict(dict)    # week -> key -> [leads, quotable, jobs, revenue, cancelled]
+        self.camps_live = {}
         self.cp = defaultdict(dict)    # week -> "p\tcampaign id" -> [cost_cents, clicks, impr, conv100] (Google campaign totals)
         self.sec = set()               # campaign ids that belong to the 2nd Google account
         self.ms_names = {}             # Microsoft campaign id -> (name, status) from ms_camp exports
+        self.meta_names = {}           # Meta campaign id -> name
+        self.meta_ad2set = {}          # Meta ad id -> ad set id
         self.label = {}                # key -> display text (original casing)
 
     # ---- load live files ------------------------------------------------
@@ -114,12 +120,12 @@ class Store:
     # ---- new pulls --------------------------------------------------------
     def clear(self, src, a, b, prefix=None):
         tgt = getattr(self, src)
+        pres = None if prefix is None else tuple(p + "\t" for p in (prefix if isinstance(prefix, (list, tuple)) else [prefix]))
         for w in weeks_in(a, b):
-            if prefix is None:
+            if pres is None:
                 tgt.pop(w, None)
             elif w in tgt:
-                pre = prefix + "\t"
-                for k in [k for k in tgt[w] if (k[0] if isinstance(k, tuple) else k).startswith(pre)]:
+                for k in [k for k in tgt[w] if (k[0] if isinstance(k, tuple) else k).startswith(pres)]:
                     del tgt[w][k]
 
     def add_g_kw(self, rows, p="g"):
@@ -196,6 +202,38 @@ class Store:
             m[2] += int(num(r["Impressions"]))
             m[3] += round(num(r["Conversions"]) * 100)
 
+    # ---- Meta Ads (meta_insights_tsv exports; p = m; the "keyword" is the ad set) ----
+    def add_meta(self, rows):
+        for r in rows:
+            w = monday(r["date_start"]).isoformat()
+            cid, sid = r["campaign_id"], r["adset_id"]
+            self.meta_names[cid] = r.get("campaign_name", "")
+            self.meta_ad2set[r["ad_id"]] = sid
+            k = f"m\t{cid}\t{sid}"
+            self.label[k] = r.get("adset_name", "") or sid
+            vals = [round(num(r["spend"]) * 100), int(num(r["clicks"])), int(num(r["impressions"])), round(num(r["leads"]) * 100)]
+            m = self.kw[w].setdefault(k, [0, 0, 0, 0, 0])
+            c = self.cp[w].setdefault(f"m\t{cid}", [0, 0, 0, 0])
+            for i in range(4):
+                m[i] += vals[i]; c[i] += vals[i]
+
+    def add_wcm(self, obj, name2cid, set_ids):
+        if "results" in obj:
+            obj = obj["results"]["data"]["data"]
+        if "data" in obj and "rows" not in obj:
+            obj = obj["data"]
+        for week, camp, kw, leads, quot, jobs, rev, canc in obj["rows"]:
+            cname = norm((camp or "").replace("+", " "))
+            cid = name2cid.get(cname, "")
+            kw = (kw or "").strip()
+            sid = kw if kw in set_ids else self.meta_ad2set.get(kw, "")
+            if not cid and sid:
+                cid = next((k.split("\t")[1] for w in self.kw for k in self.kw[w] if k.startswith("m\t") and k.endswith("\t" + sid)), "")
+            k = f"m\t{cid}\t{sid}"
+            m = self.wc[week].setdefault(k, [0, 0, 0, 0, 0])
+            for i, v in enumerate((leads, quot, jobs, rev, canc)):
+                m[i] += round(v or 0)
+
     def add_wc(self, obj):
         if "results" in obj:
             obj = obj["results"]["data"]["data"]
@@ -237,9 +275,23 @@ def load_raw(store, d):
             store.clear(src, *rng[key], prefix="b")
             for f in files:
                 fn(tsv(f))
-    wc_files = sorted(glob.glob(os.path.join(d, "wc*.json")))
+    meta_files = sorted(glob.glob(os.path.join(d, "meta_ads*.tsv")))
+    if "meta_ads" in rng and meta_files:
+        store.clear("kw", *rng["meta_ads"], prefix="m")
+        store.clear("cp", *rng["meta_ads"], prefix="m")
+        for f in meta_files:
+            store.add_meta(tsv(f))
+    wcm_files = sorted(glob.glob(os.path.join(d, "wcm*.json")))
+    if "wcm" in rng and wcm_files:
+        store.clear("wc", *rng["wcm"], prefix="m")
+        name2cid = {norm(v[0]): ck.split("\t")[1] for ck, v in store.camps_live.items() if ck.startswith("m\t")}
+        name2cid.update({norm(n): c for c, n in store.meta_names.items()})
+        set_ids = {k.split("\t")[2] for w in store.kw for k in store.kw[w] if k.startswith("m\t")}
+        for f in wcm_files:
+            store.add_wcm(json.load(open(f)), name2cid, set_ids)
+    wc_files = sorted(glob.glob(os.path.join(d, "wc_*.json")) + glob.glob(os.path.join(d, "wc[0-9]*.json")))
     if "wc" in rng and wc_files:
-        store.clear("wc", *rng["wc"])
+        store.clear("wc", *rng["wc"], prefix=["g", "h", "b"])
         for f in wc_files:
             store.add_wc(json.load(open(f)))
 
@@ -321,6 +373,8 @@ def emit(store, out, today, camps, info, neg, names):
                 kk = k[0] if isinstance(k, tuple) else k
                 p, cid, _ = kk.split("\t")
                 seen.add(f"{p}\t{cid}")
+    for cid, nm in store.meta_names.items():
+        camps[f"m\t{cid}"] = [nm, "", "META", "meta", ""]
     for cid, (nm, st) in store.ms_names.items():
         camps[f"b\t{cid}"] = [nm, st.upper(), "SEARCH", "microsoft", ""]
     for ck in sorted(seen):
@@ -329,7 +383,9 @@ def emit(store, out, today, camps, info, neg, names):
         if ck in camps and camps[ck][0]:
             continue
         if not cid:
-            camps[ck] = ["(Microsoft lead, no campaign)" if p == "b" else "(Google lead, no campaign)", "", "", "unknown", ""]
+            camps[ck] = [{"b": "(Microsoft lead, no campaign)", "m": "(Meta lead, no campaign)"}.get(p, "(Google lead, no campaign)"), "", "", "meta" if p == "m" else "unknown", ""]
+        elif p == "m":
+            camps[ck] = [nm or f"Meta campaign {cid}", "", "META", "meta", ""]
         elif p == "b":
             camps[ck] = [nm or f"Microsoft campaign {cid}", "", "SEARCH", "microsoft", ""]
         elif not cid.isdigit():
@@ -420,6 +476,7 @@ def main():
         if os.path.exists(os.path.join(a.live, "neg.js")):
             live_man["_neg"] = parse_js(os.path.join(a.live, "neg.js")).get("neg", {})
     camps, info, neg = load_dims(a.dims, live_man)
+    store.camps_live = camps
     store.sec = {ck.split("\t")[1] for ck, v in camps.items() if ck.startswith("h\t")}
     for d in a.raw:
         load_raw(store, d)
