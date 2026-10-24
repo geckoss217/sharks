@@ -22,6 +22,8 @@ Decode + verify: `python3 sharks/scripts/keywords_decode.py <file.b64> <sha256> 
   SELECT segments.week, campaign.id, ad_group.id, ad_group_criterion.criterion_id, ad_group_criterion.keyword.text, ad_group_criterion.keyword.match_type, metrics.cost_micros, metrics.clicks, metrics.impressions, metrics.conversions, metrics.conversions_value FROM keyword_view WHERE segments.date BETWEEN 'START' AND 'END' AND metrics.impressions > 0
 - pull/g_st_1.tsv:
   SELECT segments.week, campaign.id, search_term_view.search_term, segments.search_term_match_type, segments.keyword.info.text, segments.keyword.info.match_type, metrics.cost_micros, metrics.clicks, metrics.impressions, metrics.conversions FROM search_term_view WHERE segments.date BETWEEN 'START' AND 'END' AND metrics.clicks > 0
+- pull/g_camp.tsv (campaign totals, so spend outside keywords lands on a "(no keyword)" row):
+  SELECT segments.week, campaign.id, metrics.cost_micros, metrics.clicks, metrics.impressions, metrics.conversions FROM campaign WHERE segments.date BETWEEN 'START' AND 'END' AND metrics.impressions > 0
 - dims/g_campaigns.tsv:
   SELECT campaign.id, campaign.name, campaign.status, campaign.advertising_channel_type, campaign.bidding_strategy_type FROM campaign
 - dims/g_kwdims.tsv:
@@ -37,12 +39,13 @@ Params: {"start_date": "START", "end_date": "END", "lookback_days": 30}. Save th
 jobs, revenue and cancelled equal the summary. If the call errors, retry once, then split the range in half (wc_1, wc_2).
 
 ## 3. Build
-- pull/ranges.json: {"g_kw": ["START","END"], "g_st": ["START","END"], "wc": ["START","END"]}
+- pull/ranges.json: {"g_kw": ["START","END"], "g_camp": ["START","END"], "g_st": ["START","END"], "wc": ["START","END"]}
   Only list a source whose files are present and verified; a listed source REPLACES those weeks.
 - `python3 sharks/scripts/keywords_build.py --live sharks/data/keywords --raw pull --dims dims --names sharks/data/keywords/campaign-names.json --out sharks/data/keywords --today TODAY`
   It prints CHANGED: lines. A new quarter rolls the old recent.js into q-YYYYQn.js automatically.
-- Sanity check before committing: the newest week's Google cost in pull/g_kw.tsv is within a few dollars of the
-  Weekly Ads Scorecard's g_spend for that week (data/ads.js), and WhatConverts google leads match its gl column.
+- Sanity check before committing: the newest week's Google cost in pull/g_camp.tsv is within a few dollars of the
+  Weekly Ads Scorecard's g_spend for that week (data/ads.js), and WhatConverts google leads are within ~5 of its gl
+  column (the keyword data leaves out internal test-number calls).
 
 ## 4. Publish
 - `git add data/keywords && git commit -m "Keyword scorecard refresh <END>"` then `git push origin HEAD:main`

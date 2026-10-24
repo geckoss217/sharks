@@ -84,6 +84,7 @@ class Store:
         self.kw = defaultdict(dict)    # week -> key -> [cost_cents, clicks, impr, conv100, matchmask]
         self.st = defaultdict(dict)    # week -> (key, term, stmatch) -> [cost_cents, clicks, impr, conv100]
         self.wc = defaultdict(dict)    # week -> key -> [leads, quotable, jobs, revenue, cancelled]
+        self.cp = defaultdict(dict)    # week -> campaign id -> [cost_cents, clicks, impr, conv100] (Google campaign totals)
         self.label = {}                # key -> display text (original casing)
 
     # ---- load live files ------------------------------------------------
@@ -97,6 +98,8 @@ class Store:
                 self.st[W[r[0]]][(K[r[1]], T[r[2]], r[3])] = r[4:8]
             for r in o["wc"]:
                 self.wc[W[r[0]]][K[r[1]]] = r[2:7]
+            for r in o.get("cp", []):
+                self.cp[W[r[0]]][r[1]] = r[2:6]
             for k, v in o.get("lab", {}).items():
                 self.label.setdefault(K[int(k)], v)
 
@@ -119,6 +122,14 @@ class Store:
             m[3] += round(num(r["metrics.conversions"]) * 100)
             m[4] |= MT.get(r.get("ad_group_criterion.keyword.match_type", ""), 0)
 
+    def add_g_camp(self, rows):
+        for r in rows:
+            m = self.cp[r["segments.week"]].setdefault(r["campaign.id"], [0, 0, 0, 0])
+            m[0] += round(num(r["metrics.cost_micros"]) / 1e4)
+            m[1] += int(num(r["metrics.clicks"]))
+            m[2] += int(num(r["metrics.impressions"]))
+            m[3] += round(num(r["metrics.conversions"]) * 100)
+
     def add_g_st(self, rows):
         for r in rows:
             w = r["segments.week"]
@@ -140,6 +151,8 @@ class Store:
         if "data" in obj and "rows" not in obj:
             obj = obj["data"]
         for week, plat, camp, kw, leads, quot, jobs, rev, canc in obj["rows"]:
+            if norm(camp) == "test numbers" or norm(kw) == "test number":
+                continue    # internal test calls
             p = "b" if plat == "bing" else "g"
             k = f"{p}\t{camp or ''}\t{norm(kw)}"
             m = self.wc[week].setdefault(k, [0, 0, 0, 0, 0])
@@ -151,6 +164,11 @@ def load_raw(store, d):
     rng = json.load(open(os.path.join(d, "ranges.json")))
     if "g_kw" in rng and os.path.exists(os.path.join(d, "g_kw.tsv")):
         store.clear("kw", *rng["g_kw"]); store.add_g_kw(tsv(os.path.join(d, "g_kw.tsv")))
+    cp_files = sorted(glob.glob(os.path.join(d, "g_camp*.tsv")))
+    if "g_camp" in rng and cp_files:
+        store.clear("cp", *rng["g_camp"])
+        for p in cp_files:
+            store.add_g_camp(tsv(p))
     st_files = sorted(glob.glob(os.path.join(d, "g_st*.tsv")))
     if "g_st" in rng and st_files:
         store.clear("st", *rng["g_st"])
@@ -228,6 +246,9 @@ def emit(store, out, today, camps, info, neg, names):
 
     # campaigns seen in leads but unknown to the main Google account
     seen = set()
+    for w in store.cp:
+        for cid in store.cp[w]:
+            seen.add(f"g\t{cid}")
     for src in (store.kw, store.st, store.wc):
         for w in src:
             for k in src[w]:
@@ -240,7 +261,7 @@ def emit(store, out, today, camps, info, neg, names):
         if ck in camps and camps[ck][0]:
             continue
         if not cid:
-            camps[ck] = ["(no campaign in WhatConverts)", "", "", "unknown", ""]
+            camps[ck] = ["(Microsoft lead, no campaign)" if p == "b" else "(Google lead, no campaign)", "", "", "unknown", ""]
         elif p == "b":
             camps[ck] = [nm or f"Microsoft campaign {cid}", "", "SEARCH", "microsoft", ""]
         elif not cid.isdigit():
@@ -271,8 +292,21 @@ def emit(store, out, today, camps, info, neg, names):
         kw = [[wi[w], kid(k)] + m for w in W for k, m in sorted(store.kw.get(w, {}).items())]
         st = [[wi[w], kid(k), tid(t), sm] + m for w in W for (k, t, sm), m in sorted(store.st.get(w, {}).items())]
         wc = [[wi[w], kid(k)] + m for w in W for k, m in sorted(store.wc.get(w, {}).items())]
+        cp = [[wi[w], cid] + m for w in W for cid, m in sorted(store.cp.get(w, {}).items())]
+        # campaign spend not on any keyword (Performance Max, dynamic search ads, display) -> "(no keyword)" row
+        rk = []
+        for w in W:
+            kwsum = defaultdict(lambda: [0, 0, 0, 0])
+            for k, m in store.kw.get(w, {}).items():
+                cid = k.split("\t")[1]
+                for i in range(4):
+                    kwsum[cid][i] += m[i]
+            for cid, m in sorted(store.cp.get(w, {}).items()):
+                res = [m[i] - kwsum[cid][i] for i in range(4)]
+                if res[0] > 50 or res[2] > 0:
+                    rk.append([wi[w], kid(f"g\t{cid}\t")] + [max(0, x) for x in res])
         lab = {str(i): store.label[k] for i, k in enumerate(K) if k in store.label and store.label[k] != k.split("\t")[2]}
-        obj = {"kind": "q", "q": q, "weeks": W, "k": K, "t": T, "kw": kw, "st": st, "wc": wc, "lab": lab}
+        obj = {"kind": "q", "q": q, "weeks": W, "k": K, "t": T, "kw": kw, "st": st, "wc": wc, "cp": cp, "rk": rk, "lab": lab}
         write("recent.js" if q == recent_q else f"q-{q}.js", obj)
     stale = os.path.join(out, f"q-{recent_q}.js")
     if os.path.exists(stale):
