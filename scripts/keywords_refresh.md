@@ -36,13 +36,24 @@ Decode + verify: `python3 sharks/scripts/keywords_decode.py <file.b64> <sha256> 
   dims/g_campneg.tsv: SELECT campaign.id, campaign_criterion.keyword.text, campaign_criterion.keyword.match_type FROM campaign_criterion WHERE campaign_criterion.type = 'KEYWORD' AND campaign_criterion.negative = TRUE
   (Pull all four negative files — g_ and g2_ — or none: the builder replaces the whole negative list when any is present.)
 
+## 1b. Microsoft Ads (account 187103199) — two Zapier actions per report, MicrosoftAdvertisingCLIAPI
+a) code_action_microsoftadvertisingcliapi__msads_report_submit {"report_type": TYPE, "start_date": "START", "end_date": "END"}
+   -> download_url (pre-signed, valid ~10 min; null = no rows -> write a header-only file)
+b) immediately code_action_microsoftadvertisingcliapi__msads_zip_to_tsv {"download_url": <exact url>, "clicks_only": CLICKS}
+   -> row_count, sha256, b64z; decode with keywords_decode.py like the Google files.
+- pull/ms_camp.tsv: TYPE campaign, CLICKS false (TimePeriod CampaignId CampaignName CampaignStatus Impressions Clicks Spend Conversions)
+- pull/ms_kw.tsv: TYPE keyword, CLICKS false
+- pull/ms_st.tsv: TYPE search, CLICKS true
+Sanity check: ms_camp weekly Spend equals data/ads.js ms_spend for the same week.
+
 ## 2. WhatConverts — Zapier action WhatConvertsCLIAPI / code_action_whatconvertscliapi__paid_keyword_weekly
 Params: {"start_date": "START", "end_date": "END", "lookback_days": 30}. Save the inner data object
 ({"summary":…, "rows":…}) to pull/wc_1.json. Check with python: per platform, the row sums of leads, quotable,
 jobs, revenue and cancelled equal the summary. If the call errors, retry once, then split the range in half (wc_1, wc_2).
 
 ## 3. Build
-- pull/ranges.json: {"g_kw": ["START","END"], "g_camp": [...], "g_st": [...], "g2_kw": [...], "g2_camp": [...], "g2_st": [...], "wc": [...]}
+- pull/ranges.json: {"g_kw": ["START","END"], "g_camp": [...], "g_st": [...], "g2_kw": [...], "g2_camp": [...], "g2_st": [...],
+  "ms_kw": [...], "ms_camp": [...], "ms_st": [...], "wc": [...]}
   Only list a source whose files are present and verified; a listed source REPLACES those weeks for that account only.
 - `python3 sharks/scripts/keywords_build.py --live sharks/data/keywords --raw pull --dims dims --names sharks/data/keywords/campaign-names.json --out sharks/data/keywords --today TODAY`
   It prints CHANGED: lines. A new quarter rolls the old recent.js into q-YYYYQn.js automatically.
@@ -58,4 +69,4 @@ jobs, revenue and cancelled equal the summary. If the call errors, retry once, t
 - Verify: fetch https://sharks.emergencycleanings.com/data/keywords/manifest.js and check dataThrough = END.
 
 ## 5. Report (bullets only, 3–5 lines)
-Weeks refreshed, Google spend (both accounts) + paid leads + jobs for the newest week, anything that failed.
+Weeks refreshed, newest week's spend (Google both accounts, Microsoft) + paid leads + jobs, anything that failed.

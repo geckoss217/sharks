@@ -3,12 +3,14 @@
 
 Inputs (all optional except at least one --raw dir):
   --raw DIR [DIR ...]   pull folders. Each holds any of:
-        ranges.json   {"g_kw": [...], "g_camp": [...], "g_st": [...], "g2_kw": [...], "g2_camp": [...], "g2_st": [...], "wc": [...]}
+        ranges.json   {"g_kw": [...], "g_camp": [...], "g_st": [...], "g2_kw": [...], "g2_camp": [...], "g2_st": [...],
+                       "ms_kw": [...], "ms_camp": [...], "ms_st": [...], "wc": [...]}
                       date span each source covered. Weeks inside a span are REPLACED by the
                       new pull (so a week with no rows is cleared, not left stale).
         g_kw*.tsv / g2_kw*.tsv       keyword_view exports (main / 2nd Google account)
         g_camp*.tsv / g2_camp*.tsv   campaign weekly totals
         g_st*.tsv / g2_st*.tsv       search_term_view exports
+        ms_kw*.tsv / ms_camp*.tsv / ms_st*.tsv   Microsoft Ads weekly reports (msads_zip_to_tsv)
         wc*.json      WhatConvertsCLIAPI paid_keyword_weekly results ({summary, rows})
   --dims DIR            Google settings: g_ / g2_ kwdims*.tsv, campaigns.tsv, negatives.tsv, campneg.tsv
   --names FILE          JSON {"b|<id>": "name", "g|<id>": "name"} for campaigns Google can't name
@@ -19,8 +21,8 @@ Inputs (all optional except at least one --raw dir):
 Model: everything is weekly (Monday start). A week belongs to the quarter of its Thursday.
 Completed quarters -> q-YYYYQn.js, the latest quarter -> recent.js, plus manifest.js.
 Keys: "<p>\t<campaignId>\t<keyword lowercased>"; p = g (Google main account 299-875-2313),
-h (Google 2nd account 343-869-7076, files g2_*) or b (Microsoft/Bing).
-Spend comes from the two Google Ads accounts. Leads, quotable leads, jobs and revenue come from
+h (Google 2nd account 343-869-7076, files g2_*) or b (Microsoft Ads account 187103199, files ms_*).
+Spend comes from the two Google Ads accounts and Microsoft Ads. Leads, quotable leads, jobs and revenue come from
 WhatConverts paid leads (google|bing cpc); a google lead whose campaign belongs to the 2nd account gets p = h.
 No names, phone numbers or emails are written.
 """
@@ -89,6 +91,7 @@ class Store:
         self.wc = defaultdict(dict)    # week -> key -> [leads, quotable, jobs, revenue, cancelled]
         self.cp = defaultdict(dict)    # week -> "p\tcampaign id" -> [cost_cents, clicks, impr, conv100] (Google campaign totals)
         self.sec = set()               # campaign ids that belong to the 2nd Google account
+        self.ms_names = {}             # Microsoft campaign id -> (name, status) from ms_camp exports
         self.label = {}                # key -> display text (original casing)
 
     # ---- load live files ------------------------------------------------
@@ -155,6 +158,44 @@ class Store:
             m[2] += int(num(r["metrics.impressions"]))
             m[3] += round(num(r["metrics.conversions"]) * 100)
 
+    # ---- Microsoft Ads (msads_zip_to_tsv exports; p = b) ----------------
+    def add_ms_kw(self, rows):
+        for r in rows:
+            w = monday(r["TimePeriod"]).isoformat()
+            text = r.get("Keyword", "")
+            k = f"b\t{r['CampaignId']}\t{norm(text)}"
+            self.label.setdefault(k, text.strip())
+            m = self.kw[w].setdefault(k, [0, 0, 0, 0, 0])
+            m[0] += round(num(r["Spend"]) * 100)
+            m[1] += int(num(r["Clicks"]))
+            m[2] += int(num(r["Impressions"]))
+            m[3] += round(num(r["Conversions"]) * 100)
+            m[4] |= MT.get((r.get("BidMatchType") or "").upper(), 0)
+
+    def add_ms_camp(self, rows, names):
+        for r in rows:
+            w = monday(r["TimePeriod"]).isoformat()
+            m = self.cp[w].setdefault(f"b\t{r['CampaignId']}", [0, 0, 0, 0])
+            m[0] += round(num(r["Spend"]) * 100)
+            m[1] += int(num(r["Clicks"]))
+            m[2] += int(num(r["Impressions"]))
+            m[3] += round(num(r["Conversions"]) * 100)
+            names[r["CampaignId"]] = (r.get("CampaignName", ""), r.get("CampaignStatus", ""))
+
+    def add_ms_st(self, rows):
+        msm = {"EXACT": "E", "PHRASE": "P", "BROAD": "B"}
+        for r in rows:
+            w = monday(r["TimePeriod"]).isoformat()
+            kt = r.get("Keyword", "")
+            k = f"b\t{r['CampaignId']}\t{norm(kt)}"
+            term = norm(r.get("SearchQuery", ""))
+            sm = msm.get((r.get("DeliveredMatchType") or "").upper(), "?")
+            m = self.st[w].setdefault((k, term, sm), [0, 0, 0, 0])
+            m[0] += round(num(r["Spend"]) * 100)
+            m[1] += int(num(r["Clicks"]))
+            m[2] += int(num(r["Impressions"]))
+            m[3] += round(num(r["Conversions"]) * 100)
+
     def add_wc(self, obj):
         if "results" in obj:
             obj = obj["results"]["data"]["data"]
@@ -188,6 +229,14 @@ def load_raw(store, d):
             store.clear("st", *rng[f"{pre}_st"], prefix=p)
             for f in st_files:
                 store.add_g_st(tsv(f), p)
+    for src, pat, fn in (("kw", "ms_kw*.tsv", store.add_ms_kw), ("st", "ms_st*.tsv", store.add_ms_st),
+                         ("cp", "ms_camp*.tsv", lambda rows: store.add_ms_camp(rows, store.ms_names))):
+        files = sorted(glob.glob(os.path.join(d, pat)))
+        key = {"kw": "ms_kw", "st": "ms_st", "cp": "ms_camp"}[src]
+        if key in rng and files:
+            store.clear(src, *rng[key], prefix="b")
+            for f in files:
+                fn(tsv(f))
     wc_files = sorted(glob.glob(os.path.join(d, "wc*.json")))
     if "wc" in rng and wc_files:
         store.clear("wc", *rng["wc"])
@@ -272,6 +321,8 @@ def emit(store, out, today, camps, info, neg, names):
                 kk = k[0] if isinstance(k, tuple) else k
                 p, cid, _ = kk.split("\t")
                 seen.add(f"{p}\t{cid}")
+    for cid, (nm, st) in store.ms_names.items():
+        camps[f"b\t{cid}"] = [nm, st.upper(), "SEARCH", "microsoft", ""]
     for ck in sorted(seen):
         p, cid = ck.split("\t")
         nm = names.get(f"{p}|{cid}")
