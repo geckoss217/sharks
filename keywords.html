@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Keyword Scorecard · Emergency Cleanings Internal</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔑</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy-deep: #0a0f1e; --navy: #1e2a3a; --navy-card: #16202e; --teal: #00a19a; --orange: #ff6b00;
+    --white: #ffffff; --muted: #9aa7b8; --line: rgba(255,255,255,0.08); --line-strong: rgba(255,255,255,0.16);
+    --good: #2fbf71; --bad: #ff5a5f; --amber: #f5b301;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Poppins', sans-serif; background: var(--navy-deep); color: var(--white); min-height: 100vh; line-height: 1.5; font-size: 15px; overflow-x: hidden; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 28px;
+           border-bottom: 1px solid var(--line); background: var(--navy-card); position: sticky; top: 0; z-index: 40; }
+  header img { height: 34px; width: auto; }
+  .hright { display: flex; align-items: center; gap: 14px; }
+  .badge { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--muted);
+           border: 1px solid var(--line-strong); border-radius: 999px; padding: 5px 12px; white-space: nowrap; }
+  .back { color: var(--teal); text-decoration: none; font-size: 13px; font-weight: 600; }
+  .back:hover { text-decoration: underline; }
+  main { width: min(1800px, calc(100vw - 48px)); margin: 0 auto; padding: 36px 0 90px; }
+  .eyebrow { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .12em; color: var(--teal); }
+  h1 { font-size: clamp(28px, 4.5vw, 42px); font-weight: 900; line-height: 1.15; margin: 6px 0 10px; }
+  .sub { color: var(--muted); font-size: 15px; max-width: 90ch; }
+  .controls { display: flex; flex-wrap: wrap; gap: 12px 18px; align-items: end; margin-top: 22px; }
+  .ctl { display: flex; flex-direction: column; gap: 5px; }
+  .ctl > label, .lbl { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+  select, input[type=text], input[type=search] { font-family: inherit; font-size: 14px; color: var(--white); background: var(--navy); border: 1px solid var(--line-strong);
+                  border-radius: 8px; padding: 7px 10px; min-width: 130px; }
+  button { font-family: inherit; font-size: 13px; font-weight: 600; color: var(--white); background: var(--orange); border: 0;
+           border-radius: 50px; padding: 8px 16px; cursor: pointer; }
+  button.ghost { background: transparent; border: 1px solid var(--line-strong); color: var(--muted); }
+  button.ghost:hover { color: var(--white); }
+  .seg { display: inline-flex; border: 1px solid var(--line-strong); border-radius: 999px; overflow: hidden; }
+  .seg button { background: transparent; color: var(--muted); border-radius: 0; padding: 7px 13px; font-size: 12.5px; }
+  .seg button.on { background: var(--teal); color: var(--white); }
+  .range { display: flex; gap: 6px; align-items: center; color: var(--muted); font-size: 13px; }
+  .meta { color: var(--muted); font-size: 12px; margin-top: 10px; }
+  .hold { display: none; margin-top: 18px; padding: 12px 16px; border-radius: 12px; background: rgba(255,107,0,.12); border: 1px solid rgba(255,107,0,.5); font-size: 13.5px; }
+  .hold b { color: var(--orange); }
+  .hold ul { margin: 4px 0 0 18px; color: var(--muted); font-size: 13px; }
+  .note { margin-top: 14px; padding: 10px 14px; border-radius: 10px; background: rgba(245,179,1,.08); border: 1px solid rgba(245,179,1,.35); font-size: 13px; color: #f0d58a; display: none; }
+
+  .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin-top: 24px; }
+  .tile { background: var(--navy-card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
+  .t-label { font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  .t-value { font-size: 26px; font-weight: 800; margin: 2px 0 2px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .t-sub { font-size: 12px; color: var(--muted); }
+  .chg { font-weight: 700; white-space: nowrap; }
+  .chg.good { color: var(--good); } .chg.bad { color: var(--bad); } .chg.flat { color: var(--muted); }
+
+  .story { margin-top: 18px; background: var(--navy-card); border: 1px solid var(--line); border-left: 3px solid var(--orange); border-radius: 12px; padding: 12px 16px; font-size: 14px; }
+  .story ul { list-style: none; }
+  .story li { margin: 3px 0; }
+  .story li a { color: var(--teal); cursor: pointer; text-decoration: underline; font-size: 12.5px; margin-left: 6px; }
+
+  .tabs { display: flex; gap: 8px; margin-top: 30px; border-bottom: 1px solid var(--line); }
+  .tab { background: transparent; color: var(--muted); border-radius: 10px 10px 0 0; padding: 10px 18px; font-size: 14px; border: 1px solid transparent; border-bottom: 0; }
+  .tab.on { color: var(--white); background: var(--navy-card); border-color: var(--line); }
+  .tblbar { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; justify-content: space-between; margin: 14px 0 10px; }
+  .tblbar .left { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; }
+  .hint { color: var(--muted); font-size: 12px; }
+  .panel { background: var(--navy-card); border: 1px solid var(--line); border-radius: 14px; }
+  .tblwrap { overflow-x: auto; padding: 4px 6px; max-height: 78vh; overflow-y: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+  th, td { padding: 7px 8px; text-align: right; white-space: nowrap; }
+  th.l, td.l { text-align: left; }
+  thead th { position: sticky; top: 0; background: var(--navy-card); z-index: 2; color: var(--muted); font-weight: 600; font-size: 10.5px;
+             text-transform: uppercase; letter-spacing: .04em; border-bottom: 1px solid var(--line-strong); cursor: pointer; user-select: none; white-space: normal; line-height: 1.25; vertical-align: bottom; min-width: 52px; }
+  thead th.sorted { color: var(--white); }
+  thead th .ar { color: var(--teal); }
+  th:first-child, td:first-child { position: sticky; left: 0; background: var(--navy-card); z-index: 1; text-align: left; max-width: 340px; overflow: hidden; text-overflow: ellipsis; }
+  thead th:first-child { z-index: 3; }
+  tbody tr.r { border-bottom: 1px solid var(--line); cursor: pointer; }
+  tbody tr.r:hover td { background: #1b2838; }
+  tbody tr.r.open td { background: #1b2838; }
+  tr.tot td { font-weight: 700; border-bottom: 1px solid var(--line-strong); background: #111a27; }
+  tr.tot td:first-child { background: #111a27; }
+  td.na { color: rgba(154,167,184,.55); }
+  td.camp { max-width: 260px; overflow: hidden; text-overflow: ellipsis; color: var(--muted); font-size: 12px; text-align: left; }
+  .kwt { font-weight: 600; }
+  .kwt.none { color: var(--muted); font-style: italic; font-weight: 500; }
+  .mt { display: inline-block; font-size: 10px; font-weight: 700; border-radius: 4px; padding: 0 5px; margin-right: 3px; border: 1px solid var(--line-strong); color: var(--muted); }
+  .st { font-size: 11px; font-weight: 600; border-radius: 999px; padding: 1px 8px; }
+  .st.on { color: var(--good); background: rgba(47,191,113,.12); }
+  .st.paused { color: var(--amber); background: rgba(245,179,1,.12); }
+  .st.removed { color: var(--muted); background: rgba(255,255,255,.06); }
+  .qs { font-weight: 700; } .qs.lo { color: var(--bad); } .qs.mid { color: var(--amber); } .qs.hi { color: var(--good); }
+  .flag { display: inline-block; font-size: 10.5px; font-weight: 600; border-radius: 999px; padding: 1px 8px; margin: 0 3px 0 0; white-space: nowrap; }
+  .flag.red { color: #ffb3b5; background: rgba(255,90,95,.16); }
+  .flag.amb { color: #ffe08a; background: rgba(245,179,1,.14); }
+  .flag.org { color: #ffc28f; background: rgba(255,107,0,.16); }
+  .flag.grn { color: #9fe8c0; background: rgba(47,191,113,.14); }
+  .flag.gry { color: var(--muted); background: rgba(255,255,255,.06); }
+  tr.detail td { background: #0f1724; white-space: normal; text-align: left; padding: 14px 16px; }
+  tr.detail td:first-child { position: static; max-width: none; }
+  .dgrid { display: grid; grid-template-columns: minmax(320px, 1.3fr) minmax(320px, 1fr); gap: 18px; }
+  .dgrid h4 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: 6px; }
+  .dgrid svg { width: 100%; height: 170px; display: block; }
+  .dgrid table { font-size: 12px; }
+  .dgrid table td, .dgrid table th { padding: 4px 6px; position: static; background: transparent; }
+  .dgrid table th { position: static; cursor: default; }
+  .legend { display: flex; gap: 14px; font-size: 11.5px; color: var(--muted); margin-top: 4px; flex-wrap: wrap; }
+  .sw { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+  .axis text { fill: var(--muted); font-size: 10px; font-family: Poppins, sans-serif; }
+  .more { text-align: center; padding: 12px; }
+  #c-camp { max-width: 380px; }
+  #colpanel { display: none; margin-bottom: 12px; padding: 12px; }
+  #colpanel.open { display: block; }
+  #colpanel ul { list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 6px 14px; }
+  #colpanel li { display: flex; align-items: center; gap: 8px; font-size: 13px; background: var(--navy); border: 1px solid var(--line); border-radius: 8px; padding: 5px 8px; }
+  #colpanel li span { flex: 1; }
+  #colpanel input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--teal); }
+  #colpanel .mv { background: transparent; border: 1px solid var(--line-strong); color: var(--muted); padding: 1px 8px; border-radius: 6px; font-size: 12px; }
+  .notes { margin-top: 40px; color: var(--muted); font-size: 12.5px; max-width: 120ch; }
+  .notes li { margin: 4px 0 4px 18px; }
+  .empty { display: none; margin-top: 30px; color: var(--muted); }
+  .loading { color: var(--muted); padding: 30px; text-align: center; }
+  @media (max-width: 900px) { main { width: calc(100vw - 32px); } .dgrid { grid-template-columns: 1fr; } header { padding: 14px 16px; } }
+</style>
+</head>
+<body>
+<header>
+  <a href="/"><img src="https://emergencycleanings.com/wp-content/uploads/2026/07/Final-logo-for-buyer-png.png" alt="Emergency Cleanings"></a>
+  <div class="hright"><a class="back" href="/">&larr; All tools</a><span class="badge">Internal · Team Only</span></div>
+</header>
+<main>
+  <div class="eyebrow">Paid Search</div>
+  <h1>Keyword Scorecard</h1>
+  <p class="sub">Every keyword and search term, from ad spend to booked jobs. Pick any range of weeks. Weeks run Monday–Sunday. Click a row for its weekly trend and the search terms behind it.</p>
+
+  <div class="controls">
+    <div class="ctl"><span class="lbl">Source</span>
+      <div class="seg" id="c-src"><button data-v="all" class="on">All paid search</button><button data-v="main">Google (main)</button><button data-v="secondary">Google (2nd acct)</button><button data-v="microsoft">Microsoft</button></div></div>
+    <div class="ctl"><span class="lbl">Period</span>
+      <div class="seg" id="c-per"><button data-v="4">4 wks</button><button data-v="13" class="on">13 wks</button><button data-v="26">26 wks</button><button data-v="52">52 wks</button><button data-v="ytd">YTD</button><button data-v="all">All</button></div></div>
+    <div class="ctl"><span class="lbl">Weeks</span>
+      <div class="range"><select id="c-from"></select> to <select id="c-to"></select></div></div>
+    <div class="ctl"><span class="lbl">Compare to</span>
+      <div class="seg" id="c-cmp"><button data-v="off">Off</button><button data-v="prior" class="on">Prior period</button><button data-v="ly">Last year</button></div></div>
+  </div>
+  <div class="meta" id="meta"></div>
+  <div class="hold" id="hold"></div>
+  <div class="note" id="note"></div>
+  <div class="empty" id="empty">Keyword data hasn't loaded yet.</div>
+
+  <div class="tiles" id="tiles"></div>
+  <div class="story" id="story"></div>
+
+  <div class="tabs"><button class="tab on" data-t="kw">Keywords</button><button class="tab" data-t="st">Search terms</button></div>
+
+  <div class="tblbar">
+    <div class="left">
+      <div class="ctl"><span class="lbl">Group by</span>
+        <div class="seg" id="c-grp"><button data-v="kc" class="on">Keyword + campaign</button><button data-v="k">Keyword</button><button data-v="c">Campaign</button></div></div>
+      <div class="ctl"><span class="lbl">Show</span>
+        <select id="c-show">
+          <option value="active">With spend or leads</option>
+          <option value="spend">With spend</option>
+          <option value="leads">With leads</option>
+          <option value="flag">Flagged only</option>
+          <option value="on">Keywords live now</option>
+          <option value="all">Everything</option>
+        </select></div>
+      <div class="ctl"><span class="lbl">Campaign</span><select id="c-camp"><option value="">All campaigns</option></select></div>
+      <div class="ctl"><span class="lbl">Search</span><input type="search" id="c-q" placeholder="Filter text"></div>
+    </div>
+    <div><button class="ghost" id="colbtn">Columns</button> <button class="ghost" id="colreset">Reset</button> <button class="ghost" id="csv">Download CSV</button></div>
+  </div>
+  <div class="panel" id="colpanel"><ul id="collist"></ul></div>
+  <div class="panel tblwrap"><table id="tbl"></table><div class="more" id="more"></div></div>
+
+  <ul class="notes">
+    <li>Spend, impressions, clicks, Google conversions, Quality Score and search terms come from the main Google Ads account (299-875-2313) through the Google Ads API. The second Google account and Microsoft Ads aren't connected for spend yet, so their spend columns show “—”.</li>
+    <li>Leads, quotable leads, booked jobs and revenue come from WhatConverts paid search leads (google or bing, cpc), for every account. Transactions and appointments aren't counted as leads. WhatConverts has no leads before Apr 1, 2025 and no transactions before Sept 25, 2025, so leads and jobs are blank before those dates.</li>
+    <li>A booked job gets the keyword WhatConverts stored on the job. When the job has none, it takes the keyword of the most recent paid lead from the same phone or email. Jobs with neither land on “(no keyword)” under their campaign. Jobs count in the week they were booked; cancelled jobs are excluded.</li>
+    <li>About 40% of Google paid leads arrive in WhatConverts with no keyword and no campaign. They show as “(no keyword)” so the totals still match the Ads Scorecard funnel.</li>
+    <li>Leads join to keywords on campaign + keyword text, so a keyword running as both Exact and Phrase in one campaign is one row (match types shown as chips). Group by Keyword to combine a keyword across campaigns and platforms.</li>
+    <li>Search terms list only terms that got at least one click. “Add as keyword” = the term converted in Google Ads and isn't a keyword yet. “Negative?” = $100+ spend, no Google conversions, and the term isn't itself one of your keywords. “Already negative” = the exact term is on a negative list for that campaign. Both are prompts to review, not changes. Log any change in the Ads Change Log first.</li>
+    <li>Flags: “Spend, no leads” = $250+ spend and 0 leads. “Leads, no jobs” = 8+ leads and 0 booked jobs (only for ranges after Sept 22, 2025). “Low QS” = Quality Score 4 or lower. “Hold” = the campaign has an active hold in the Ads Change Log.</li>
+    <li>Data refreshes every Monday morning. Column layout and view choices are saved in this browser only.</li>
+  </ul>
+</main>
+
+<script>
+/* ---------- data loading ---------- */
+const BASE = '/data/keywords/';
+const HOLDS_URL = '/api/changelog?view=holds';
+const KW = { man: null, files: {}, waiting: {}, add(o) { if (o.kind === 'manifest') this.man = o; else { this.files[o.q] = o; (this.waiting[o.q] || []).forEach(f => f()); } } };
+function loadScript(src) { return new Promise((ok, bad) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = bad; document.head.appendChild(s); }); }
+async function ensureQuarter(q) {
+  if (KW.files[q]) return;
+  const name = q === KW.man.recent ? 'recent.js' : 'q-' + q + '.js';
+  await loadScript(BASE + name + '?v=' + encodeURIComponent(KW.man.asOf));
+}
+const qkey = w => { const d = new Date(w + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + 3); return d.getUTCFullYear() + 'Q' + (Math.floor(d.getUTCMonth() / 3) + 1); };
+const addDays = (w, n) => { const d = new Date(w + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+
+/* ---------- helpers ---------- */
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const fmt$ = v => v == null || isNaN(v) ? '—' : '$' + Math.round(v).toLocaleString('en-US');
+const fmt$c = v => v == null || isNaN(v) || !isFinite(v) ? '—' : '$' + (v < 100 ? v.toFixed(2) : Math.round(v).toLocaleString('en-US'));
+const fmtN = v => v == null || isNaN(v) ? '—' : Math.round(v).toLocaleString('en-US');
+const fmtD = (v, d = 1) => v == null || isNaN(v) || !isFinite(v) ? '—' : v.toFixed(d);
+const fmtP = v => v == null || isNaN(v) || !isFinite(v) ? '—' : (v * 100).toFixed(1) + '%';
+const div = (a, b) => (b ? a / b : null);
+const store = { get(k, d) { try { const v = localStorage.getItem('kw_' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+                set(k, v) { try { localStorage.setItem('kw_' + k, JSON.stringify(v)); } catch (e) {} } };
+const MTN = { 1: 'E', 2: 'P', 4: 'B' };
+const mtChips = m => [1, 2, 4].filter(b => m & b).map(b => `<span class="mt">${MTN[b]}</span>`).join('');
+const STMN = { E: 'Exact', e: 'Close variant (exact)', P: 'Phrase', p: 'Close variant (phrase)', B: 'Broad', '?': 'Other' };
+const SRC_LABEL = { main: 'Google', secondary: 'Google 2nd acct', microsoft: 'Microsoft', unknown: 'Unknown', other: 'Other' };
+const TH = { spendNoLead: 250, leadsNoJob: 8, lowQS: 4, negSpend: 100 };
+
+/* ---------- state ---------- */
+const S = {
+  src: store.get('src', 'all'), per: store.get('per', '13'), cmp: store.get('cmp', 'prior'), grp: store.get('grp', 'kc'),
+  show: store.get('show', 'active'), tab: store.get('tab', 'kw'), camp: '', q: '', from: null, to: null,
+  sort: store.get('sort', { kw: ['spend', -1], st: ['spend', -1] }), limit: 200, open: null,
+};
+let HOLDS = { names: new Set(), account: false, list: [] };
+
+/* ---------- columns ---------- */
+const COLS = {
+  kw: [
+    { k: 'name', t: 'Keyword', l: 1, always: 1 },
+    { k: 'match', t: 'Match', l: 1 },
+    { k: 'camp', t: 'Campaign', l: 1 },
+    { k: 'src', t: 'Source', l: 1 },
+    { k: 'status', t: 'Status', l: 1 },
+    { k: 'qs', t: 'QS' },
+    { k: 'spend', t: 'Spend', f: fmt$, good: -1 },
+    { k: 'impr', t: 'Impr.', f: fmtN, hide: 1 },
+    { k: 'clicks', t: 'Clicks', f: fmtN },
+    { k: 'ctr', t: 'CTR', f: fmtP },
+    { k: 'cpc', t: 'Cost / click', f: fmt$c },
+    { k: 'gconv', t: 'Google conv.', f: v => fmtD(v, 1) },
+    { k: 'leads', t: 'Leads', f: fmtN },
+    { k: 'quot', t: 'Quotable', f: fmtN },
+    { k: 'qrate', t: 'Quotable %', f: fmtP },
+    { k: 'jobs', t: 'Booked jobs', f: fmtN },
+    { k: 'rev', t: 'Revenue', f: fmt$ },
+    { k: 'cpl', t: 'Cost / lead', f: fmt$c, hide: 1 },
+    { k: 'cpq', t: 'Cost / quotable', f: fmt$c },
+    { k: 'cpj', t: 'Cost / job', f: fmt$c },
+    { k: 'roas', t: 'Revenue / spend', f: v => v == null ? '—' : v.toFixed(1) + 'x' },
+    { k: 'd_spend', t: 'Spend vs prior', cmp: 1 },
+    { k: 'd_leads', t: 'Leads vs prior', cmp: 1, hide: 1 },
+    { k: 'd_quot', t: 'Quotable vs prior', cmp: 1 },
+    { k: 'd_jobs', t: 'Jobs vs prior', cmp: 1 },
+    { k: 'flags', t: 'Flags', l: 1 },
+  ],
+  st: [
+    { k: 'name', t: 'Search term', l: 1, always: 1 },
+    { k: 'kwtext', t: 'Matched keyword', l: 1 },
+    { k: 'stm', t: 'How it matched', l: 1 },
+    { k: 'camp', t: 'Campaign', l: 1 },
+    { k: 'spend', t: 'Spend', f: fmt$ },
+    { k: 'impr', t: 'Impr.', f: fmtN, hide: 1 },
+    { k: 'clicks', t: 'Clicks', f: fmtN },
+    { k: 'ctr', t: 'CTR', f: fmtP },
+    { k: 'cpc', t: 'Cost / click', f: fmt$c },
+    { k: 'gconv', t: 'Google conv.', f: v => fmtD(v, 1) },
+    { k: 'cpa', t: 'Cost / Google conv.', f: fmt$c },
+    { k: 'd_spend', t: 'Spend vs prior', cmp: 1 },
+    { k: 'flags', t: 'Flags', l: 1 },
+  ],
+};
+function colLayout(tab) {
+  const all = COLS[tab].map(c => c.k);
+  let order = store.get('order_' + tab, null), hidden = store.get('hidden_' + tab, null);
+  if (!order) order = all.slice();
+  order = order.filter(k => all.includes(k)); all.forEach(k => { if (!order.includes(k)) order.push(k); });
+  if (!hidden) hidden = COLS[tab].filter(c => c.hide).map(c => c.k);
+  return { order, hidden };
+}
+let LAYOUT = { kw: colLayout('kw'), st: colLayout('st') };
+function visibleCols() {
+  const L = LAYOUT[S.tab], by = Object.fromEntries(COLS[S.tab].map(c => [c.k, c]));
+  return L.order.map(k => by[k]).filter(c => c && (c.always || !L.hidden.includes(c.k)) && (!c.cmp || S.cmp !== 'off'));
+}
+
+/* ---------- aggregation ---------- */
+function campInfo(p, cid) { return (KW.man.camps[p + '\t' + cid] || [p === 'b' ? 'Microsoft campaign ' + cid : 'Campaign ' + cid, '', '', p === 'b' ? 'microsoft' : 'secondary']); }
+function srcOf(p, cid) { return campInfo(p, cid)[3] || (p === 'b' ? 'microsoft' : 'secondary'); }
+function inSrc(p, cid) { return S.src === 'all' || srcOf(p, cid) === S.src; }
+function groupKey(p, cid, text) {
+  if (S.grp === 'k') return text;
+  if (S.grp === 'c') return p + '\t' + cid;
+  return p + '\t' + cid + '\t' + text;
+}
+const blank = () => ({ spend: 0, clicks: 0, impr: 0, conv: 0, leads: 0, quot: 0, jobs: 0, rev: 0, canc: 0, hasSpend: false, mt: 0, camps: new Set(), srcs: new Set(), keys: new Set(), label: null });
+
+function weeksBetween(a, b) { return KW.man.weeks.filter(w => w >= a && w <= b); }
+function windows() {
+  const W = weeksBetween(S.from, S.to);
+  let C = [];
+  if (S.cmp === 'prior' && W.length) { const n = W.length; C = Array.from({ length: n }, (_, i) => addDays(W[0], -7 * (n - i))); }
+  if (S.cmp === 'ly' && W.length) C = W.map(w => addDays(w, -364));
+  return { W, C };
+}
+async function loadFor(weeks) { const qs = [...new Set(weeks.map(qkey))].filter(q => KW.man.quarters.includes(q)); await Promise.all(qs.map(ensureQuarter)); }
+
+function aggKw(weekSet) {
+  const G = new Map(), camp = S.camp;
+  const files = [...new Set([...weekSet].map(qkey))].map(q => KW.files[q]).filter(Boolean);
+  for (const F of files) {
+    const wOK = F.weeks.map(w => weekSet.has(w));
+    const keyParts = F.k.map(k => k.split('\t'));
+    const add = (r, isWc) => {
+      if (!wOK[r[0]]) return;
+      const [p, cid, text] = keyParts[r[1]];
+      if (!inSrc(p, cid) || (camp && camp !== p + '\t' + cid)) return;
+      const gk = groupKey(p, cid, text);
+      let g = G.get(gk); if (!g) { g = blank(); G.set(gk, g); g.p = p; g.cid = cid; g.text = text; }
+      g.camps.add(p + '\t' + cid); g.srcs.add(srcOf(p, cid)); g.keys.add(F.k[r[1]]);
+      const lab = F.lab && F.lab[r[1]]; if (lab && !g.label) g.label = lab;
+      if (isWc) { g.leads += r[2]; g.quot += r[3]; g.jobs += r[4]; g.rev += r[5]; g.canc += r[6]; }
+      else { g.spend += r[2] / 100; g.clicks += r[3]; g.impr += r[4]; g.conv += r[5] / 100; g.mt |= r[6]; g.hasSpend = true; }
+    };
+    for (const r of F.kw) add(r, false);
+    for (const r of F.wc) add(r, true);
+  }
+  return G;
+}
+function aggSt(weekSet) {
+  const G = new Map(), camp = S.camp;
+  const files = [...new Set([...weekSet].map(qkey))].map(q => KW.files[q]).filter(Boolean);
+  for (const F of files) {
+    const wOK = F.weeks.map(w => weekSet.has(w));
+    for (const r of F.st) {
+      if (!wOK[r[0]]) continue;
+      const [p, cid, kt] = F.k[r[1]].split('\t');
+      if (!inSrc(p, cid) || (camp && camp !== p + '\t' + cid)) continue;
+      const term = F.t[r[2]];
+      const gk = S.grp === 'c' ? term + '\t' + p + '\t' + cid : (S.grp === 'k' ? term : term + '\t' + F.k[r[1]] + '\t' + r[3]);
+      let g = G.get(gk); if (!g) { g = blank(); g.term = term; g.p = p; g.cid = cid; g.kt = kt; g.stm = new Set(); g.kts = new Set(); G.set(gk, g); }
+      g.camps.add(p + '\t' + cid); g.stm.add(r[3]); if (kt) g.kts.add((F.lab && F.lab[r[1]]) || kt);
+      g.spend += r[4] / 100; g.clicks += r[5]; g.impr += r[6]; g.conv += r[7] / 100; g.hasSpend = true;
+    }
+  }
+  return G;
+}
+
+/* ---------- derived row ---------- */
+let KWTEXTS = null, NEGS = null;
+function buildIndexes() {
+  KWTEXTS = new Set(); for (const k of Object.keys(KW.man.info || {})) KWTEXTS.add(k.split('\t')[2]);
+  NEGS = new Map();
+}
+function rowKw(gk, g, c, Wfirst) {
+  const info = S.grp === 'kc' && g.p === 'g' ? (KW.man.info[gk] || null) : null;
+  const camps = [...g.camps];
+  const r = {
+    id: gk, g, text: g.text, hasSpend: g.hasSpend,
+    name: S.grp === 'c' ? campInfo(g.p, g.cid)[0] : (g.text === '' ? '(no keyword)' : (g.label || g.text)),
+    match: g.mt, camp: S.grp === 'c' ? '' : (camps.length === 1 ? campInfo(...camps[0].split('\t'))[0] : camps.length + ' campaigns'),
+    src: [...g.srcs].map(s => SRC_LABEL[s] || s).join(', '),
+    status: info ? info[0] : (S.grp === 'kc' && g.p === 'g' && g.hasSpend ? 'removed' : null),
+    qs: info ? info[1] : null,
+    spend: g.hasSpend || [...g.srcs].includes('main') ? g.spend : null, clicks: g.hasSpend ? g.clicks : null, impr: g.hasSpend ? g.impr : null, gconv: g.hasSpend ? g.conv : null,
+    leads: g.leads, quot: g.quot, jobs: g.jobs, rev: g.rev,
+  };
+  const spendKnown = r.spend != null && !(g.srcs.has('secondary') || g.srcs.has('microsoft'));
+  r.ctr = r.clicks != null ? div(g.clicks, g.impr) : null;
+  r.cpc = r.clicks != null ? div(g.spend, g.clicks) : null;
+  r.qrate = div(g.quot, g.leads);
+  r.cpl = spendKnown ? div(g.spend, g.leads) : null;
+  r.cpq = spendKnown ? div(g.spend, g.quot) : null;
+  r.cpj = spendKnown ? div(g.spend, g.jobs) : null;
+  r.roas = spendKnown && g.spend ? g.rev / g.spend : null;
+  if (c) { r.d_spend = [g.spend, c.spend, -1]; r.d_leads = [g.leads, c.leads, 1]; r.d_quot = [g.quot, c.quot, 1]; r.d_jobs = [g.jobs, c.jobs, 1]; }
+  else if (S.cmp !== 'off') { r.d_spend = [g.spend, 0, -1]; r.d_leads = [g.leads, 0, 1]; r.d_quot = [g.quot, 0, 1]; r.d_jobs = [g.jobs, 0, 1]; }
+  const f = [];
+  const wcOK = Wfirst >= KW.man.wcFrom, jobsOK = Wfirst >= KW.man.jobsFrom;
+  if (spendKnown && g.text !== '' && wcOK && g.spend >= TH.spendNoLead && g.leads === 0) f.push(['red', 'Spend, no leads', 'snl']);
+  if (jobsOK && g.text !== '' && g.leads >= TH.leadsNoJob && g.jobs === 0) f.push(['amb', 'Leads, no jobs', 'lnj']);
+  if (r.qs != null && r.qs <= TH.lowQS) f.push(['amb', 'Low QS ' + r.qs, 'qs']);
+  if (g.jobs > 0 && spendKnown && g.rev >= 3 * g.spend && g.spend > 0) f.push(['grn', 'Rev ≥ 3x spend', 'win']);
+  if (holdFor(camps)) f.push(['org', 'Hold', 'hold']);
+  r.flags = f;
+  return r;
+}
+function rowSt(gk, g, c) {
+  const camps = [...g.camps];
+  const r = { id: gk, g, name: g.term, kwtext: [...g.kts].join(', ') || '(none)', stm: [...g.stm].map(x => STMN[x] || x).join(', '),
+    camp: camps.length === 1 ? campInfo(...camps[0].split('\t'))[0] : camps.length + ' campaigns',
+    spend: g.spend, impr: g.impr, clicks: g.clicks, gconv: g.conv, ctr: div(g.clicks, g.impr), cpc: div(g.spend, g.clicks), cpa: div(g.spend, g.conv), hasSpend: true };
+  if (S.cmp !== 'off') r.d_spend = [g.spend, c ? c.spend : 0, -1];
+  const f = [];
+  const isKw = KWTEXTS.has(g.term);
+  const negd = camps.some(ck => { const n = NEGS.get(ck.split('\t')[1]); return n && n.has(g.term); });
+  if (negd) f.push(['gry', 'Already negative', 'neg']);
+  else if (!isKw && g.spend >= TH.negSpend && g.conv === 0) f.push(['red', 'Negative?', 'negc']);
+  if (!isKw && g.conv >= 1) f.push(['grn', 'Add as keyword', 'add']);
+  r.iskw = isKw;
+  r.flags = f;
+  return r;
+}
+function holdFor(campKeys) {
+  if (!HOLDS.names.size && !HOLDS.account) return false;
+  return campKeys.some(ck => { const [p, cid] = ck.split('\t'); const i = campInfo(p, cid); if (i[3] !== 'main') return false; return HOLDS.account || HOLDS.names.has(String(i[0]).trim().toLowerCase()); });
+}
+
+/* ---------- render ---------- */
+let ROWS = [], TOTAL = null, CTOTAL = null;
+async function render() {
+  const { W, C } = windows();
+  if (!W.length) return;
+  $('tbl').innerHTML = ''; $('more').innerHTML = '<div class="loading">Loading…</div>';
+  await loadFor(W.concat(C));
+  if (S.tab === 'st' && !KW.files.neg) { try { await loadScript(BASE + 'neg.js?v=' + encodeURIComponent(KW.man.asOf)); NEGS = new Map(Object.entries(KW.files.neg.neg).map(([c, l]) => [c, new Set(l)])); } catch (e) {} }
+  const Wset = new Set(W), Cset = new Set(C);
+  const cur = S.tab === 'kw' ? aggKw(Wset) : aggSt(Wset);
+  const cmp = S.cmp !== 'off' ? (S.tab === 'kw' ? aggKw(Cset) : aggSt(Cset)) : null;
+  // totals for tiles always from keyword data
+  const kwCur = S.tab === 'kw' ? cur : aggKw(Wset);
+  const kwCmp = S.cmp === 'off' ? null : (S.tab === 'kw' ? cmp : aggKw(Cset));
+  renderTiles(kwCur, kwCmp, W, C);
+  ROWS = [];
+  for (const [gk, g] of cur) ROWS.push(S.tab === 'kw' ? rowKw(gk, g, cmp && cmp.get(gk), W[0]) : rowSt(gk, g, cmp && cmp.get(gk)));
+  renderStory(S.tab === 'kw' ? ROWS : [...kwCur].map(([gk, g]) => rowKw(gk, g, null, W[0])));
+  renderTable();
+  const n = W.length;
+  $('meta').textContent = `${n} week${n > 1 ? 's' : ''}: ${W[0]} to ${addDays(W[n - 1], 6)}` + (C.length ? ` · compared with ${C[0]} to ${addDays(C[C.length - 1], 6)}` : '') + ` · data through ${KW.man.dataThrough} · updated ${KW.man.asOf} MT`;
+  const notes = [];
+  if (W[0] < KW.man.wcFrom) notes.push('Part of this range is before Apr 1, 2025, when WhatConverts started tracking leads. Leads and jobs are blank for those weeks.');
+  else if (W[0] < KW.man.jobsFrom) notes.push('Part of this range is before Sept 25, 2025, when WhatConverts started tracking booked jobs. Jobs and revenue undercount for those weeks.');
+  if (C.length && C[0] < KW.man.firstWeek) notes.push('The comparison period starts before the data does, so its numbers are partial.');
+  $('note').style.display = notes.length ? 'block' : 'none'; $('note').textContent = notes.join(' ');
+}
+
+function sumAll(G) {
+  const t = { spend: 0, clicks: 0, impr: 0, leads: 0, quot: 0, jobs: 0, rev: 0, kwLeads: 0, kwJobs: 0, mainLeads: 0, mainQuot: 0, mainJobs: 0, mainRev: 0 };
+  for (const g of G.values()) {
+    t.spend += g.spend; t.clicks += g.clicks; t.impr += g.impr; t.leads += g.leads; t.quot += g.quot; t.jobs += g.jobs; t.rev += g.rev;
+    if (g.text !== '' && S.grp !== 'c') { t.kwLeads += g.leads; t.kwJobs += g.jobs; }
+  }
+  return t;
+}
+function chgHtml(a, b, goodDir) {
+  if (b == null || a == null) return '';
+  if (!b) return a ? '<span class="chg flat">new</span>' : '<span class="chg flat">–</span>';
+  const p = (a - b) / b, cls = Math.abs(p) < 0.02 ? 'flat' : ((p > 0) === (goodDir > 0) ? 'good' : 'bad');
+  return `<span class="chg ${cls}">${p > 0 ? '▲' : '▼'} ${Math.abs(p * 100).toFixed(0)}%</span>`;
+}
+function renderTiles(G, Cg, W, C) {
+  const t = sumAll(G), c = Cg ? sumAll(Cg) : null;
+  const spendNote = S.src === 'secondary' || S.src === 'microsoft' ? 'not connected' : (S.src === 'all' ? 'main Google account' : '');
+  const showSpend = !(S.src === 'secondary' || S.src === 'microsoft');
+  const cv = (k, d) => c ? chgHtml(t[k], c[k], d) + ' vs ' + (S.cmp === 'ly' ? 'last year' : 'prior') : '';
+  const tiles = [
+    ['Spend', showSpend ? fmt$(t.spend) : '—', showSpend ? cv('spend', -1) || spendNote : spendNote],
+    ['Clicks', showSpend ? fmtN(t.clicks) : '—', showSpend ? 'CTR ' + fmtP(div(t.clicks, t.impr)) : ''],
+    ['Paid leads', fmtN(t.leads), cv('leads', 1)],
+    ['Quotable', fmtN(t.quot), (fmtP(div(t.quot, t.leads)) + ' of leads ') + (c ? chgHtml(t.quot, c.quot, 1) : '')],
+    ['Booked jobs', fmtN(t.jobs), cv('jobs', 1)],
+    ['Revenue', fmt$(t.rev), cv('rev', 1)],
+    ['Leads with a keyword', fmtP(div(t.kwLeads, t.leads)), `${fmtN(t.kwLeads)} of ${fmtN(t.leads)} · jobs ${fmtN(t.kwJobs)} of ${fmtN(t.jobs)}`],
+  ];
+  if (S.src === 'main') tiles.splice(4, 0, ['Cost / quotable', fmt$c(div(t.spend, t.quot)), c ? chgHtml(div(t.spend, t.quot), div(c.spend, c.quot), -1) : '']);
+  $('tiles').innerHTML = tiles.map(([l, v, s]) => `<div class="tile"><div class="t-label">${l}</div><div class="t-value">${v}</div><div class="t-sub">${s || '&nbsp;'}</div></div>`).join('');
+}
+function renderStory(rows) {
+  const snl = rows.filter(r => r.flags.some(f => f[2] === 'snl')), lnj = rows.filter(r => r.flags.some(f => f[2] === 'lnj')), qs = rows.filter(r => r.flags.some(f => f[2] === 'qs') && r.spend > 0);
+  const win = rows.filter(r => r.flags.some(f => f[2] === 'win'));
+  const li = [];
+  if (snl.length) li.push(`<li><b>${snl.length} keyword${snl.length > 1 ? 's' : ''}</b> spent <b>${fmt$(snl.reduce((a, r) => a + r.spend, 0))}</b> with no leads.<a data-f="snl">show</a></li>`);
+  if (lnj.length) li.push(`<li><b>${lnj.length} keyword${lnj.length > 1 ? 's' : ''}</b> brought <b>${fmtN(lnj.reduce((a, r) => a + r.leads, 0))} leads</b> and no booked jobs.<a data-f="lnj">show</a></li>`);
+  if (qs.length) li.push(`<li><b>${qs.length} keyword${qs.length > 1 ? 's' : ''}</b> with spend have a Quality Score of ${TH.lowQS} or lower.<a data-f="qs">show</a></li>`);
+  if (win.length) li.push(`<li><b>${win.length} keyword${win.length > 1 ? 's' : ''}</b> returned 3x or more of their spend in booked revenue.<a data-f="win">show</a></li>`);
+  $('story').style.display = li.length ? 'block' : 'none';
+  $('story').innerHTML = '<ul>' + li.join('') + '</ul>';
+  $('story').querySelectorAll('a[data-f]').forEach(a => a.onclick = () => { FLAGFILTER = a.dataset.f; if (S.tab !== 'kw') setTab('kw'); else renderTable(); $('tbl').scrollIntoView({ behavior: 'smooth' }); });
+}
+let FLAGFILTER = null;
+function filtered() {
+  const q = S.q.trim().toLowerCase();
+  return ROWS.filter(r => {
+    if (FLAGFILTER) return r.flags.some(f => f[2] === FLAGFILTER);
+    if (q && !(String(r.name).toLowerCase().includes(q) || String(r.camp || '').toLowerCase().includes(q) || String(r.kwtext || '').toLowerCase().includes(q))) return false;
+    switch (S.show) {
+      case 'spend': return r.spend > 0;
+      case 'leads': return r.leads > 0;
+      case 'flag': return r.flags.some(f => f[0] !== 'gry');
+      case 'on': return r.status === 'on';
+      case 'all': return true;
+      default: return r.spend > 0 || r.leads > 0 || r.jobs > 0 || r.clicks > 0;
+    }
+  });
+}
+function sortVal(r, k) {
+  const v = r[k];
+  if (Array.isArray(v)) { if (k === 'flags') return v.length; return v[0] - v[1]; }
+  if (k === 'match') return r.match || 0;
+  return v;
+}
+function cellHtml(c, r) {
+  const v = r[c.k];
+  switch (c.k) {
+    case 'name': {
+      if (S.tab === 'st') return `<td class="l"><span class="kwt">${esc(v)}</span></td>`;
+      const none = r.text === '' && S.grp !== 'c';
+      return `<td class="l" title="${esc(v)}"><span class="kwt${none ? ' none' : ''}">${esc(v)}</span></td>`;
+    }
+    case 'match': return `<td class="l">${mtChips(v || 0)}</td>`;
+    case 'camp': return `<td class="camp" title="${esc(v)}">${esc(v)}</td>`;
+    case 'src': case 'kwtext': case 'stm': return `<td class="l">${esc(v)}</td>`;
+    case 'status': return `<td class="l">${v ? `<span class="st ${v}">${v === 'on' ? 'Live' : v === 'paused' ? 'Paused' : 'Removed'}</span>` : ''}</td>`;
+    case 'qs': return `<td>${v == null ? '<span class="na">—</span>' : `<span class="qs ${v <= 4 ? 'lo' : v <= 6 ? 'mid' : 'hi'}">${v}</span>`}</td>`;
+    case 'flags': return `<td class="l">${(v || []).map(f => `<span class="flag ${f[0]}">${f[1]}</span>`).join('')}</td>`;
+    default:
+      if (c.cmp) return `<td>${v ? chgHtml(v[0], v[1], v[2]) || '<span class="chg flat">–</span>' : ''}</td>`;
+      return `<td class="${v == null ? 'na' : ''}">${c.f ? c.f(v) : esc(v)}</td>`;
+  }
+}
+function renderTable() {
+  const cols = visibleCols(), [sk, sd] = S.sort[S.tab] || ['spend', -1];
+  let rows = filtered();
+  rows.sort((a, b) => { const x = sortVal(a, sk), y = sortVal(b, sk); if (x == null && y == null) return 0; if (x == null) return 1; if (y == null) return -1; return (typeof x === 'string' ? x.localeCompare(y) : x - y) * sd || (b.spend || 0) - (a.spend || 0) || (b.leads || 0) - (a.leads || 0); });
+  const head = '<thead><tr>' + cols.map(c => `<th class="${c.l ? 'l' : ''}${c.k === sk ? ' sorted' : ''}" data-k="${c.k}">${c.t}${c.k === sk ? ` <span class="ar">${sd > 0 ? '▲' : '▼'}</span>` : ''}</th>`).join('') + '</tr></thead>';
+  // totals row
+  const T = rows.reduce((t, r) => { for (const k of ['spend', 'clicks', 'impr', 'gconv', 'leads', 'quot', 'jobs', 'rev']) t[k] = (t[k] || 0) + (r[k] || 0); return t; }, {});
+  const anySpend = rows.some(r => r.spend != null);
+  const totRow = { name: `Total · ${rows.length.toLocaleString()} rows`, spend: anySpend ? T.spend : null, clicks: anySpend ? T.clicks : null, impr: anySpend ? T.impr : null, gconv: anySpend ? T.gconv : null,
+    leads: T.leads, quot: T.quot, jobs: T.jobs, rev: T.rev, ctr: div(T.clicks, T.impr), cpc: div(T.spend, T.clicks), qrate: div(T.quot, T.leads), cpa: div(T.spend, T.gconv), flags: [] };
+  if (S.src === 'main') { totRow.cpl = div(T.spend, T.leads); totRow.cpq = div(T.spend, T.quot); totRow.cpj = div(T.spend, T.jobs); totRow.roas = T.spend ? T.rev / T.spend : null; }
+  const totHtml = '<tr class="tot">' + cols.map(c => {
+    if (c.k === 'name') return `<td class="l">${esc(totRow.name)}</td>`;
+    if (c.l || c.cmp || c.k === 'qs') return '<td></td>';
+    const v = totRow[c.k]; return `<td class="${v == null ? 'na' : ''}">${c.f ? c.f(v) : ''}</td>`;
+  }).join('') + '</tr>';
+  const shown = rows.slice(0, S.limit);
+  const body = shown.map(r => `<tr class="r${S.open === r.id ? ' open' : ''}" data-id="${esc(r.id)}">` + cols.map(c => cellHtml(c, r)).join('') + '</tr>' + (S.open === r.id ? detailRow(r, cols.length) : '')).join('');
+  $('tbl').innerHTML = head + '<tbody>' + totHtml + body + '</tbody>';
+  $('more').innerHTML = (FLAGFILTER ? `<button class="ghost" id="clearflag">Clear flag filter</button> ` : '') + (rows.length > S.limit ? `<button class="ghost" id="showmore">Show all ${rows.length.toLocaleString()} rows</button>` : (rows.length ? '' : '<div class="loading">Nothing matches these filters.</div>'));
+  if ($('showmore')) $('showmore').onclick = () => { S.limit = 1e9; renderTable(); };
+  if ($('clearflag')) $('clearflag').onclick = () => { FLAGFILTER = null; renderTable(); };
+  $('tbl').querySelectorAll('thead th').forEach(th => th.onclick = () => {
+    const k = th.dataset.k, cur = S.sort[S.tab] || [];
+    S.sort[S.tab] = [k, cur[0] === k ? -cur[1] : (COLS[S.tab].find(c => c.k === k).l ? 1 : -1)]; store.set('sort', S.sort); renderTable();
+  });
+  $('tbl').querySelectorAll('tr.r').forEach(tr => tr.onclick = () => { S.open = S.open === tr.dataset.id ? null : tr.dataset.id; renderTable(); });
+}
+
+/* ---------- detail (weekly trend + search terms) ---------- */
+function detailRow(r, span) {
+  const { W } = windows();
+  const series = W.map(w => ({ w, spend: 0, leads: 0, jobs: 0, quot: 0 }));
+  const idx = Object.fromEntries(W.map((w, i) => [w, i]));
+  const keys = r.g.keys || new Set();
+  const terms = new Map();
+  for (const q of [...new Set(W.map(qkey))]) {
+    const F = KW.files[q]; if (!F) continue;
+    const want = new Set(); F.k.forEach((k, i) => { if (S.tab === 'kw' ? keys.has(k) : r.g.camps.has(k.split('\t').slice(0, 2).join('\t'))) want.add(i); });
+    for (const x of F.kw) { const i = idx[F.weeks[x[0]]]; if (i == null || !want.has(x[1])) continue; if (S.tab === 'kw') series[i].spend += x[2] / 100; }
+    for (const x of F.wc) { const i = idx[F.weeks[x[0]]]; if (i == null || !want.has(x[1]) || S.tab !== 'kw') continue; series[i].leads += x[2]; series[i].quot += x[3]; series[i].jobs += x[4]; }
+    for (const x of F.st) {
+      const i = idx[F.weeks[x[0]]]; if (i == null || !want.has(x[1])) continue;
+      const t = F.t[x[2]];
+      if (S.tab === 'st') { if (t !== r.g.term) continue; series[i].spend += x[4] / 100; series[i].leads += x[7] / 100; continue; }
+      const m = terms.get(t) || { spend: 0, clicks: 0, conv: 0 }; m.spend += x[4] / 100; m.clicks += x[5]; m.conv += x[7] / 100; terms.set(t, m);
+    }
+  }
+  const chart = barChart(series, S.tab === 'kw' ? 'Leads' : 'Google conv.');
+  let right = '';
+  if (S.tab === 'kw') {
+    const list = [...terms].sort((a, b) => b[1].spend - a[1].spend).slice(0, 12);
+    right = `<h4>Top search terms (${list.length ? 'by spend' : 'none with clicks'})</h4>` + (list.length ? `<table><thead><tr><th class="l">Term</th><th>Spend</th><th>Clicks</th><th>Google conv.</th></tr></thead><tbody>` +
+      list.map(([t, m]) => `<tr><td class="l">${esc(t)}</td><td>${fmt$(m.spend)}</td><td>${fmtN(m.clicks)}</td><td>${fmtD(m.conv, 1)}</td></tr>`).join('') + '</tbody></table>' : '<div class="hint">Search terms exist for the main Google account only.</div>');
+    const info = KW.man.info[r.id];
+    if (info && info[3] && info[3].length) right += `<div class="hint" style="margin-top:8px">Ad groups: ${info[3].map(esc).join(', ')}</div>`;
+  } else {
+    right = `<h4>Matched keywords</h4><div class="hint">${esc(r.kwtext)}</div><div class="hint" style="margin-top:6px">Campaign: ${esc(r.camp)}</div>`;
+  }
+  return `<tr class="detail"><td colspan="${span}"><div class="dgrid"><div><h4>Weekly trend</h4>${chart}</div><div>${right}</div></div></td></tr>`;
+}
+function barChart(s, lineLabel) {
+  const W = 640, H = 170, pl = 44, pr = 36, pt = 8, pb = 22, n = s.length;
+  const maxS = Math.max(1, ...s.map(x => x.spend)), maxL = Math.max(1, ...s.map(x => x.leads));
+  const bw = (W - pl - pr) / n;
+  const y1 = v => pt + (H - pt - pb) * (1 - v / maxS), y2 = v => pt + (H - pt - pb) * (1 - v / maxL);
+  const bars = s.map((x, i) => `<rect x="${pl + i * bw + bw * 0.15}" y="${y1(x.spend)}" width="${Math.max(1, bw * 0.7)}" height="${H - pb - y1(x.spend)}" fill="#00a19a" opacity=".8"><title>${x.w}: ${fmt$(x.spend)} spend, ${fmtD(x.leads, x.leads % 1 ? 1 : 0)} ${lineLabel.toLowerCase()}${x.jobs ? ', ' + x.jobs + ' jobs' : ''}</title></rect>`).join('');
+  const pts = s.map((x, i) => `${pl + i * bw + bw / 2},${y2(x.leads)}`).join(' ');
+  const jobs = s.map((x, i) => x.jobs ? `<circle cx="${pl + i * bw + bw / 2}" cy="${y2(x.leads)}" r="5" fill="#2fbf71"><title>${x.w}: ${x.jobs} booked job${x.jobs > 1 ? 's' : ''}</title></circle>` : '').join('');
+  const step = Math.ceil(n / 8);
+  const xl = s.map((x, i) => i % step === 0 ? `<text x="${pl + i * bw + bw / 2}" y="${H - 6}" text-anchor="middle">${x.w.slice(5)}</text>` : '').join('');
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><g class="axis"><text x="${pl - 6}" y="${pt + 8}" text-anchor="end">${fmt$(maxS)}</text><text x="${pl - 6}" y="${H - pb}" text-anchor="end">$0</text>
+    <text x="${W - pr + 6}" y="${pt + 8}">${fmtN(maxL)}</text>${xl}</g><line x1="${pl}" x2="${W - pr}" y1="${H - pb}" y2="${H - pb}" stroke="rgba(255,255,255,.16)"/>${bars}
+    <polyline points="${pts}" fill="none" stroke="#ff6b00" stroke-width="2"/>${s.map((x, i) => `<circle cx="${pl + i * bw + bw / 2}" cy="${y2(x.leads)}" r="2.5" fill="#ff6b00"/>`).join('')}${jobs}</svg>
+    <div class="legend"><span><span class="sw" style="background:#00a19a"></span>Spend</span><span><span class="sw" style="background:#ff6b00"></span>${lineLabel} (right axis)</span>${S.tab === 'kw' ? '<span><span class="sw" style="background:#2fbf71;border-radius:50%"></span>Week with booked jobs</span>' : ''}</div>`;
+}
+
+/* ---------- columns panel ---------- */
+function renderColPanel() {
+  const L = LAYOUT[S.tab], by = Object.fromEntries(COLS[S.tab].map(c => [c.k, c]));
+  $('collist').innerHTML = L.order.map((k, i) => { const c = by[k]; return `<li><input type="checkbox" data-k="${k}" ${c.always ? 'disabled checked' : (L.hidden.includes(k) ? '' : 'checked')}><span>${c.t}</span><button class="mv" data-k="${k}" data-d="-1">↑</button><button class="mv" data-k="${k}" data-d="1">↓</button></li>`; }).join('');
+  $('collist').querySelectorAll('input').forEach(cb => cb.onchange = () => { const k = cb.dataset.k; L.hidden = cb.checked ? L.hidden.filter(x => x !== k) : [...L.hidden, k]; saveLayout(); renderTable(); });
+  $('collist').querySelectorAll('.mv').forEach(b => b.onclick = () => { const i = L.order.indexOf(b.dataset.k), j = i + Number(b.dataset.d); if (j < 0 || j >= L.order.length) return; [L.order[i], L.order[j]] = [L.order[j], L.order[i]]; saveLayout(); renderColPanel(); renderTable(); });
+}
+function saveLayout() { store.set('order_' + S.tab, LAYOUT[S.tab].order); store.set('hidden_' + S.tab, LAYOUT[S.tab].hidden); }
+
+/* ---------- CSV ---------- */
+function downloadCsv() {
+  const cols = visibleCols().filter(c => c.k !== 'flags'), rows = filtered();
+  const val = (c, r) => { const v = r[c.k]; if (Array.isArray(v)) return c.cmp ? (v[1] ? ((v[0] - v[1]) / v[1] * 100).toFixed(1) + '%' : '') : ''; if (c.k === 'match') return [1, 2, 4].filter(b => (v || 0) & b).map(b => MTN[b]).join(' '); if (v == null) return ''; return typeof v === 'number' ? (Math.round(v * 100) / 100) : v; };
+  const lines = [cols.map(c => c.t).concat(['Flags']).join(',')].concat(rows.map(r => cols.map(c => JSON.stringify(String(val(c, r)))).concat([JSON.stringify(r.flags.map(f => f[1]).join('; '))]).join(',')));
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([lines.join('\n')], { type: 'text/csv' }));
+  const { W } = windows(); a.download = `${S.tab === 'kw' ? 'keywords' : 'search-terms'}_${W[0]}_${W[W.length - 1]}.csv`; a.click();
+}
+
+/* ---------- controls ---------- */
+function seg(id, key, cb) {
+  const el = $(id);
+  el.querySelectorAll('button').forEach(b => { b.classList.toggle('on', b.dataset.v === S[key]); b.onclick = () => { S[key] = b.dataset.v; store.set(key, S[key]); el.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); cb && cb(); }; });
+}
+function applyPreset() {
+  const weeks = KW.man.weeks, last = weeks[weeks.length - 1];
+  let from = weeks[0];
+  if (S.per === 'ytd') from = weeks.find(w => w >= last.slice(0, 4) + '-01-01') || weeks[0];
+  else if (S.per !== 'all' && S.per !== 'custom') from = weeks[Math.max(0, weeks.length - Number(S.per))];
+  if (S.per !== 'custom') { S.from = from; S.to = last; }
+  $('c-from').value = S.from; $('c-to').value = S.to;
+}
+function setTab(t) { S.tab = t; store.set('tab', t); S.open = null; S.limit = 200; document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.t === t)); renderColPanel(); render(); }
+function fillCampaigns() {
+  const seen = new Map();
+  for (const [ck, v] of Object.entries(KW.man.camps)) seen.set(ck, v);
+  const opts = [...seen].filter(([ck, v]) => S.src === 'all' || v[3] === S.src).sort((a, b) => (a[1][3] || '').localeCompare(b[1][3] || '') || String(a[1][0]).localeCompare(String(b[1][0])));
+  $('c-camp').innerHTML = '<option value="">All campaigns</option>' + opts.map(([ck, v]) => `<option value="${esc(ck)}">${esc((SRC_LABEL[v[3]] || '') + ' · ' + v[0] + (v[1] && v[1] !== 'ENABLED' ? ' (' + v[1].toLowerCase() + ')' : ''))}</option>`).join('');
+  if (S.camp && !seen.has(S.camp)) S.camp = '';
+  $('c-camp').value = S.camp;
+}
+async function loadHolds() {
+  try {
+    const r = await fetch(HOLDS_URL, { cache: 'no-store' }); if (!r.ok) return;
+    const j = await r.json(); if (!j || !j.activeHold || !Array.isArray(j.holds)) return;
+    HOLDS.list = j.holds; HOLDS.names = new Set(j.holds.map(h => String(h.campaign || '').trim().toLowerCase())); HOLDS.account = HOLDS.names.has('account level');
+    $('hold').style.display = 'block';
+    $('hold').innerHTML = `<b>Active hold in the Ads Change Log.</b> Rows in these campaigns are flagged “Hold”. Let the hold finish before changing bids or targets.<ul>` +
+      j.holds.slice(0, 6).map(h => `<li>${esc(h.campaign || 'Account')}: ${esc(h.change || h.category || 'change')}${h.holdUntil ? ' · hold until ' + esc(h.holdUntil) : ''}</li>`).join('') + '</ul>';
+    render();
+  } catch (e) {}
+}
+
+async function init() {
+  try { await loadScript(BASE + 'manifest.js?t=' + Date.now()); } catch (e) {}
+  if (!KW.man) { $('empty').style.display = 'block'; return; }
+  buildIndexes();
+  const opts = KW.man.weeks.map(w => `<option value="${w}">${w}</option>`).join('');
+  $('c-from').innerHTML = opts; $('c-to').innerHTML = opts;
+  if (S.per === 'custom') { S.from = store.get('from', KW.man.weeks[0]); S.to = store.get('to', KW.man.weeks[KW.man.weeks.length - 1]); if (!KW.man.weeks.includes(S.from)) S.per = '13'; }
+  applyPreset();
+  seg('c-src', 'src', () => { fillCampaigns(); render(); });
+  seg('c-per', 'per', () => { applyPreset(); render(); });
+  seg('c-cmp', 'cmp', render);
+  seg('c-grp', 'grp', () => { S.open = null; render(); });
+  $('c-show').value = S.show; $('c-show').onchange = () => { S.show = $('c-show').value; store.set('show', S.show); FLAGFILTER = null; renderTable(); };
+  const custom = () => { if ($('c-from').value > $('c-to').value) $('c-to').value = $('c-from').value; S.from = $('c-from').value; S.to = $('c-to').value; S.per = 'custom'; store.set('per', 'custom'); store.set('from', S.from); store.set('to', S.to); document.querySelectorAll('#c-per button').forEach(b => b.classList.remove('on')); render(); };
+  $('c-from').onchange = custom; $('c-to').onchange = custom;
+  $('c-camp').onchange = () => { S.camp = $('c-camp').value; render(); };
+  let qt; $('c-q').oninput = () => { clearTimeout(qt); qt = setTimeout(() => { S.q = $('c-q').value; S.limit = 200; renderTable(); }, 150); };
+  document.querySelectorAll('.tab').forEach(b => b.onclick = () => setTab(b.dataset.t));
+  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.t === S.tab));
+  $('colbtn').onclick = () => $('colpanel').classList.toggle('open');
+  $('colreset').onclick = () => { store.set('order_' + S.tab, null); store.set('hidden_' + S.tab, null); LAYOUT[S.tab] = colLayout(S.tab); renderColPanel(); renderTable(); };
+  $('csv').onclick = downloadCsv;
+  fillCampaigns(); renderColPanel();
+  await render();
+  loadHolds();
+}
+init();
+</script>
+</body>
+</html>
