@@ -11,8 +11,11 @@ Runs every Monday after 6:00 AM MT. Everything below is read-only against Google
   Re-pulling 3 weeks picks up late conversions, late jobs and WhatConverts edits.
 - Make a pull folder `<work>/pull/` and a settings folder `<work>/dims/`.
 
-## 1. Google Ads (main account 299-875-2313) — Zapier action GoogleAdsCLIAPI / code_action_googleadscliapi__gaql_export_tsv
-Params: {"query": "<GAQL>"} (never "plain": true). Returns row_count, sha256, b64z.
+## 1. Google Ads — Zapier action GoogleAdsCLIAPI / code_action_googleadscliapi__gaql_export_tsv
+Params: {"query": "<GAQL>", "customer_id": "<account>"} (never "plain": true). Returns row_count, sha256, b64z.
+Run every query below for BOTH accounts:
+- main account customer_id 2998752313 -> files named g_*  (pull/g_kw.tsv, dims/g_campaigns.tsv, ...)
+- 2nd account (EC - Local Service Ads) customer_id 3438697076 -> same queries, files named g2_* (pull/g2_kw.tsv, dims/g2_campaigns.tsv, ...)
 Getting b64z to disk without retyping: if the tool result was too large to show inline, the harness saved it to a
 tool-results .txt file — read b64z and sha256 from that file with python. Otherwise write the b64z string to a file.
 The blob can arrive as several separately padded base64 chunks; the decoder handles that.
@@ -31,7 +34,7 @@ Decode + verify: `python3 sharks/scripts/keywords_decode.py <file.b64> <sha256> 
 - First Monday of the month only (negative lists; skip other weeks — the builder keeps the last ones):
   dims/g_negatives.tsv: SELECT campaign.id, ad_group.id, ad_group_criterion.keyword.text, ad_group_criterion.keyword.match_type FROM ad_group_criterion WHERE ad_group_criterion.type = 'KEYWORD' AND ad_group_criterion.negative = TRUE AND ad_group_criterion.status != 'REMOVED'
   dims/g_campneg.tsv: SELECT campaign.id, campaign_criterion.keyword.text, campaign_criterion.keyword.match_type FROM campaign_criterion WHERE campaign_criterion.type = 'KEYWORD' AND campaign_criterion.negative = TRUE
-  (Pull both or neither — the builder replaces the whole negative list when either file is present.)
+  (Pull all four negative files — g_ and g2_ — or none: the builder replaces the whole negative list when any is present.)
 
 ## 2. WhatConverts — Zapier action WhatConvertsCLIAPI / code_action_whatconvertscliapi__paid_keyword_weekly
 Params: {"start_date": "START", "end_date": "END", "lookback_days": 30}. Save the inner data object
@@ -39,8 +42,8 @@ Params: {"start_date": "START", "end_date": "END", "lookback_days": 30}. Save th
 jobs, revenue and cancelled equal the summary. If the call errors, retry once, then split the range in half (wc_1, wc_2).
 
 ## 3. Build
-- pull/ranges.json: {"g_kw": ["START","END"], "g_camp": ["START","END"], "g_st": ["START","END"], "wc": ["START","END"]}
-  Only list a source whose files are present and verified; a listed source REPLACES those weeks.
+- pull/ranges.json: {"g_kw": ["START","END"], "g_camp": [...], "g_st": [...], "g2_kw": [...], "g2_camp": [...], "g2_st": [...], "wc": [...]}
+  Only list a source whose files are present and verified; a listed source REPLACES those weeks for that account only.
 - `python3 sharks/scripts/keywords_build.py --live sharks/data/keywords --raw pull --dims dims --names sharks/data/keywords/campaign-names.json --out sharks/data/keywords --today TODAY`
   It prints CHANGED: lines. A new quarter rolls the old recent.js into q-YYYYQn.js automatically.
 - Sanity check before committing: the newest week's Google cost in pull/g_camp.tsv is within a few dollars of the
@@ -55,4 +58,4 @@ jobs, revenue and cancelled equal the summary. If the call errors, retry once, t
 - Verify: fetch https://sharks.emergencycleanings.com/data/keywords/manifest.js and check dataThrough = END.
 
 ## 5. Report (bullets only, 3–5 lines)
-Weeks refreshed, Google spend + paid leads + jobs for the newest week, anything that failed.
+Weeks refreshed, Google spend (both accounts) + paid leads + jobs for the newest week, anything that failed.
