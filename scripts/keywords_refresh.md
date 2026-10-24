@@ -51,6 +51,15 @@ Params {"account_id": "1183225860616181", "start_date": "START", "end_date": "EN
 Ad-level weekly spend, clicks, impressions and Meta-reported leads; the scorecard shows one row per ad set.
 (The second Meta ad account 1481310957196889 had no spend through Oct 2026; add it as meta_ads_2.tsv if it starts spending.)
 
+## 1d. Ads Scorecard Microsoft columns (replaces the Tracker_2025 sheet)
+Zapier MicrosoftAdvertisingCLIAPI / code_action_microsoftadvertisingcliapi__msads_weekly_account
+{"start_date": "START", "end_date": "END"} -> plain JSON {success, source, weeks:[{week_start, cost, clicks, impressions, days}]}.
+Save it as pull/ms_weekly.json and add "start_date": "START", "end_date": "END" to the top-level object, then
+`python3 sharks/scripts/ads_ms_update.py sharks/data/ads.js pull/ms_weekly.json sharks/data/ads.js`
+(updates ms_spend, ms_clicks, ms_days, ms_impr for those weeks only; a failed pull changes nothing).
+Commit data/ads.js together with data/keywords in step 4. If the week is not in data/ads.js yet (the Ads Scorecard
+refresh hasn't run), the script leaves it alone and next Monday's run fills it.
+
 ## 2. WhatConverts — Zapier action WhatConvertsCLIAPI / code_action_whatconvertscliapi__paid_keyword_weekly
 Params: {"start_date": "START", "end_date": "END", "lookback_days": 30}. Save the inner data object
 ({"summary":…, "rows":…}) to pull/wc_1.json. Check with python: per platform, the row sums of leads, quotable,
@@ -70,7 +79,7 @@ Also WhatConvertsCLIAPI / code_action_whatconvertscliapi__paid_meta_weekly {"sta
   column (the keyword data leaves out internal test-number calls).
 
 ## 4. Publish
-- `git add data/keywords && git commit -m "Keyword scorecard refresh <END>"` then `git push origin HEAD:main`
+- `git add data/keywords data/ads.js && git commit -m "Keyword scorecard refresh <END>"` then `git push origin HEAD:main`
   (fetch + rebase first if main moved). Vercel deploys main.
 - If git push is refused, publish each changed file with Zapier GitHubCLIAPI / code_action_githubcliapi__put_file_compressed
   (repo geckoss217/sharks, branch main, content = base64 zlib of the file, expected_sha256 of the file).

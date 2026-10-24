@@ -213,13 +213,13 @@
   </section>
 
   <ul class="notes">
-    <li>Spend = Google Ads cost (account 299-875-2313) + Microsoft Ads cost from the Tracker_2025 “Microsoft Ads Data” tab. Microsoft data starts Aug 20, 2025 and has gaps before late Sept 2025.</li>
+    <li>Spend = Google Ads cost (account 299-875-2313) + Microsoft Ads cost from the Microsoft Ads API (account 187103199). Microsoft spend starts the week of Aug 18, 2025; weeks with no Microsoft spend show $0.</li>
     <li>Quotable leads = WhatConverts leads with Quotable = Yes (all sources). Jobs and revenue = WhatConverts Transactions, cancellations excluded.</li>
     <li>Google Ads spend runs from the week of Dec 30, 2024. WhatConverts has no leads before Apr 1, 2025 and no transactions before Sept 25, 2025, so year-over-year jobs and revenue are blank until late Sept 2026.</li>
     <li>Most Apr–Aug 2025 leads have no sales stage (“TBD”), so 2025 wrong-number % and low-budget % aren't comparable. Those weeks are shown greyed and aren't used for year-over-year.</li>
     <li>The WhatConverts API sometimes returns a transient 503. The refresh retries up to 3 times and never writes a week that returned an error.</li>
-    <li>Ad funnel: impressions and clicks come from Google Ads and the Microsoft Ads tab. Ad leads, quotable and booked jobs are WhatConverts records with source google/cpc or bing/cpc; transaction and appointment rows are not counted as leads. Booked jobs are WhatConverts Transactions (cancelled excluded), counted in the week the job was booked, so a job can land a week or more after its lead.</li>
-    <li>Microsoft impressions aren't in the Microsoft Ads tab yet (it has Date, Cost, Clicks). Once an Impressions column is added there, the weekly refresh picks it up automatically. Until then, combined CTR and CPM use Google only.</li>
+    <li>Ad funnel: impressions and clicks come from the Google Ads and Microsoft Ads APIs. Ad leads, quotable and booked jobs are WhatConverts records with source google/cpc or bing/cpc; transaction and appointment rows are not counted as leads. Booked jobs are WhatConverts Transactions (cancelled excluded), counted in the week the job was booked, so a job can land a week or more after its lead.</li>
+    <li>Microsoft spend, clicks and impressions come from the Microsoft Ads API (replaced the Tracker_2025 sheet on Oct 24, 2026), so combined CTR and CPM now include Microsoft.</li>
     <li>Scorecard jobs and revenue count all sources, so they're higher than funnel booked jobs.</li>
     <li>The budget, funnel view choices and table column layout are saved in this browser only.</li>
   </ul>
@@ -359,7 +359,7 @@ function fx(r) {
   const add = (a, b) => (a === null || b === null) ? null : a + b;
   const pick = (g, m) => G && M ? add(g, m) : G ? g : m;
   const wc = r.wcOk && r.gl !== null && r.gl !== undefined;
-  // impressions: Microsoft impressions aren't tracked yet; if Microsoft had no spend its impressions are 0
+  // impressions: Microsoft impressions come from the Microsoft Ads API; older rows without them fall back to Google-only CTR
   const msImpr = msImprKnown ? r.ms_impr : (r.ms_spend ? null : 0);
   return {
     spend: pick(r.g_spend, r.ms_spend),
@@ -472,8 +472,8 @@ function renderFunnel(idx) {
   const wk = r => { const x = fx(r), d = (p, q) => (p === null || q === null || !q) ? null : p / q;
     return { ...x, ctr: d(x.ctrClicks, x.ctrImpr), c2l: d(x.leads, x.clicks), l2q: d(x.quot, x.leads), q2j: d(x.jobs, x.quot), cpj: d(x.spend, x.jobs) }; };
   const FM = [
-    { key: 'f_impr', label: 'Impressions' + (FPLAT === 'all' ? ' (Google; Microsoft not tracked)' : ''), fmt: 'n', get: r => FPLAT === 'all' ? (r.g_impr === null || r.g_impr === undefined ? null : r.g_impr + (n0(r.ms_impr) ?? 0)) : wk(r).impr },
-    { key: 'f_ctr',  label: FPLAT === 'ms' ? 'CTR (Microsoft not tracked)' : 'CTR (Google impressions → clicks)', fmt: '%', get: r => FPLAT === 'ms' ? wk(r).ctr : (r.g_impr ? r.g_clicks / r.g_impr : null) },
+    { key: 'f_impr', label: 'Impressions', fmt: 'n', get: r => FPLAT === 'all' ? (r.g_impr === null || r.g_impr === undefined ? null : r.g_impr + (n0(r.ms_impr) ?? 0)) : wk(r).impr },
+    { key: 'f_ctr',  label: 'CTR (impressions → clicks)', fmt: '%', get: r => wk(r).ctr },
     { key: 'f_c2l',  label: 'Click → lead rate', fmt: '%', get: r => wk(r).c2l },
     { key: 'f_l2q',  label: 'Lead → quotable rate', fmt: '%', get: r => wk(r).l2q },
     { key: 'f_q2j',  label: 'Quotable → booked rate', fmt: '%', get: r => wk(r).q2j },

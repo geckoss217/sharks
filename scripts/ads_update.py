@@ -2,7 +2,9 @@
 #   python3 ads_update.py CURRENT_ads.js google.json wc.json ms.json funnel.json OUT_ads.js
 # google.json = raw Zapier GoogleAdsCLIAPI create_report response (customer, segments.week, cost_micros, clicks, impressions)
 # wc.json     = raw Zapier WhatConverts weekly_ads_scorecard response
-# ms.json     = raw Zapier Google Sheets msads_weekly_cost response (impressions is null until the sheet has an Impressions column)
+# ms.json     = raw Zapier MicrosoftAdvertisingCLIAPI msads_weekly_account response (preferred), or the old Google Sheets
+#               msads_weekly_cost response. A week that already holds Microsoft Ads API numbers (ms_impr set) is never
+#               overwritten by the sheet; scripts/ads_ms_update.py (run by the Monday keyword refresh) fills new weeks from the API.
 # funnel.json = raw Zapier WhatConverts weekly_ads_funnel response (ad-attributed leads/quotable/jobs/revenue per platform)
 # Replaces/adds each week that is present in BOTH google and wc results. Never writes a week whose source errored.
 import json, sys, datetime, zoneinfo
@@ -43,13 +45,14 @@ g = {r['segments']['week']: (round(int(r['metrics'].get('costMicros', 0))/1e6, 2
 w = {r['week_start']: r for r in (dig(W, 'weeks') or [])} if W else {}
 m = {r['week_start']: r for r in (dig(M, 'weeks') or [])} if M else {}
 fn = {r['week_start']: r for r in (dig(FN, 'weeks') or [])} if FN else {}
-if M is None: failed.append('microsoft sheet error — Microsoft spend left as previous value')
+if M is None: failed.append('microsoft data error — Microsoft spend left as previous value')
 if FN is None and ff: failed.append('funnel (ad-attributed leads/jobs) error — funnel values left as previous value')
 rows = {r[0]: r for r in A['WEEKS']}
 I = {c: i for i, c in enumerate(COLS)}
 for wk in sorted(set(g) & set(w)):
     x = w[wk]; old = rows.get(wk)
-    if wk in m:
+    api_ms = old is not None and old[I['ms_impr']] is not None and (M is None or dig(M, 'source') != 'microsoft_ads_api')
+    if wk in m and not api_ms:
         ms = [round(float(m[wk]['cost']), 2), int(m[wk]['clicks']), int(m[wk]['days'])]
         ms_impr = None if m[wk].get('impressions') is None else int(m[wk]['impressions'])
     elif old: ms = old[3:6]; ms_impr = old[I['ms_impr']]
