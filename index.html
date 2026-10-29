@@ -431,7 +431,10 @@
   </footer>
 
 <script>
-const DATA_URL = 'https://sharks-data-geckoss217-3432s-projects.vercel.app/data.js';
+// The daily publisher deploys the file under /sharks_dashboard/. Try that first,
+// then the old root path, so a change in publish layout can't blank the section.
+const DATA_BASE = 'https://sharks-data-geckoss217-3432s-projects.vercel.app';
+const DATA_URLS = [DATA_BASE + '/sharks_dashboard/data.js', DATA_BASE + '/data.js'];
 
 function commInit(){
   const $ = id => document.getElementById(id);
@@ -642,13 +645,14 @@ function commInit(){
   render();
 }
 
-(function(){
+(function load(i){
   const s = document.createElement('script');
-  s.src = DATA_URL + '?v=' + new Date().toISOString().slice(0,10);
+  // hourly cache-buster so a late refresh shows up the same day
+  s.src = DATA_URLS[i] + '?v=' + new Date().toISOString().slice(0,13);
   s.onload = commInit;
-  s.onerror = commInit; // shows the empty-state note
+  s.onerror = () => (i + 1 < DATA_URLS.length) ? load(i + 1) : commInit(); // last resort: empty-state note
   document.head.appendChild(s);
-})();
+})(0);
 </script>
 </body>
 </html>
