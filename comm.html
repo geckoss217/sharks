@@ -527,6 +527,12 @@ function commInit(){
     $('tbl').tBodies[0].querySelectorAll('tr').forEach(tr => tr.addEventListener('click', () => { repSel.value = tr.dataset.rep; render(); }));
   }
 
+  // Deep links from the home page: ?rep=<name>&m=<metric key>
+  const qs = new URLSearchParams(location.search);
+  const wantRep = qs.get('rep'), wantM = qs.get('m');
+  if (wantRep && [...repSel.options].some(o => o.value === wantRep)) repSel.value = wantRep;
+  if (wantM) { const mi = METRICS.findIndex(x => x.k === wantM); if (mi >= 0) metSel.value = String(mi); }
+
   repSel.addEventListener('change', render);
   metSel.addEventListener('change', render);
   window.addEventListener('resize', () => render());
