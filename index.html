@@ -273,6 +273,21 @@ function loadScript(urls) {
 }
 const hourBust = () => '?v=' + new Date().toISOString().slice(0, 13);
 
+/* ── Data collectors: lead-timing and keyword files call LT.add / KW.add ── */
+window.LT = { add(o) { if (o && o.kind) this[o.kind] = o; } };
+window.KW = { add(o) { if (o && o.kind) this[o.kind] = o; } };
+// WhatConverts Sales Rep codes -> names used in the communication log
+const REP_CODES = { KTA: 'Karine Tellez', SMR: 'Silvia Ramos', SAM: 'Stiven Monjaras', DTJ: 'Dustin Jackson' };
+const CODE_OF = Object.fromEntries(Object.entries(REP_CODES).map(([c, n]) => [n, c]));
+// Sales Value per rep per day (lead created date, MT), written by the nightly lead-timing build
+const REPVAL = loadScript(['/data/lead-timing/rep-value.js' + hourBust()]).then(ok => ok && window.LT.repvalue ? window.LT.repvalue : null);
+function salesValue(rv, code, from, to) {
+  if (!rv || !rv.days) return null;
+  let s = 0;
+  for (const [d, reps] of Object.entries(rv.days)) if (d >= from && d <= to && reps[code]) s += reps[code][1];
+  return s;
+}
+
 /* ── Communication data: KPIs + rep table ────────────────── */
 // row: [offset, ic, ia, im, oc, ocn, tt, si, so, qc, qt, qn, q$, bn, b$]  offset = days before AS_OF
 const COMM_BASE = 'https://sharks-data-geckoss217-3432s-projects.vercel.app';
@@ -351,22 +366,26 @@ async function loadComm() {
   const COLS = [
     { l: 'Calls',     f: r => g(r, 4), fmt: n0 },
     { l: 'Texts',     f: r => g(r, 8), fmt: n0 },
-    { l: 'Talk h',    f: r => g(r, 6) + g(r, 10), fmt: v => (v / 60).toFixed(1) },
     { l: 'Quotes',    f: r => g(r, 11), fmt: n0 },
+    { l: 'Quoted $',  wc: true, fmt: v => v == null ? '—' : money(v) },
     { l: 'Booked',    f: r => g(r, 13), fmt: n0 },
     { l: 'Booked $',  f: r => g(r, 14), fmt: money },
   ];
   const active = r => g(r, 1) + g(r, 4) + g(r, 6) + g(r, 7) + g(r, 8) + g(r, 9) + g(r, 10) > 0;
-  const rows = reps.map(rp => ({ rp, v: COLS.map(c => sumRows(RAW[rp], 0, 6, c.f)), on: (RAW[rp] || []).some(r => r[0] <= 6 && active(r)) }))
+  const rv = await REPVAL;
+  const wFrom = addDays(day, -6);
+  const bookedIdx = COLS.findIndex(c => c.l === 'Booked $');
+  const rows = reps.map(rp => ({ rp, v: COLS.map(c => c.wc ? (CODE_OF[rp] ? salesValue(rv, CODE_OF[rp], wFrom, day) : null) : sumRows(RAW[rp], 0, 6, c.f)), on: (RAW[rp] || []).some(r => r[0] <= 6 && active(r)) }))
                    .filter(x => x.on)
-                   .sort((a, b) => b.v[5] - a.v[5] || (b.v[0] + b.v[1]) - (a.v[0] + a.v[1]));
-  const tot = COLS.map((c, i) => rows.reduce((s, x) => s + x.v[i], 0));
+                   .sort((a, b) => b.v[bookedIdx] - a.v[bookedIdx] || (b.v[0] + b.v[1]) - (a.v[0] + a.v[1]));
+  const tot = COLS.map((c, i) => c.wc && !rv ? null : rows.reduce((s, x) => s + (x.v[i] || 0), 0));
+  const unassigned = rv ? salesValue(rv, 'TBD', wFrom, day) : 0;
   $('repSub').textContent = `${shortDate(addDays(day, -6))} – ${shortDate(day)} · reps with activity, sorted by booked $`;
   $('repTbl').innerHTML = rows.length ? `<table>
-    <thead><tr><th scope="col">Rep</th>${COLS.map(c => `<th scope="col">${c.l}</th>`).join('')}</tr></thead>
+    <thead><tr><th scope="col">Rep</th>${COLS.map(c => `<th scope="col"${c.wc ? ' title="Total of the WhatConverts Sales Value field on this rep\'s leads created in these 7 days (Transactions not included)"' : ''}>${c.l}</th>`).join('')}</tr></thead>
     <tbody>${rows.map(x => `<tr><td><a href="/comm.html?rep=${encodeURIComponent(x.rp)}">${esc(x.rp)}</a></td>${x.v.map((v, i) => `<td>${COLS[i].fmt(v)}</td>`).join('')}</tr>`).join('')}</tbody>
     <tfoot><tr><td>Team</td>${tot.map((v, i) => `<td>${COLS[i].fmt(v)}</td>`).join('')}</tr></tfoot>
-  </table>` : '<p class="note">No rep activity in the last 7 days.</p>';
+  </table>${unassigned > 0 ? `<p class="k-sub" style="margin:8px 0 0">Quoted $ is the WhatConverts Sales Value on leads created in these 7 days. Another ${money(unassigned)} sits on leads with no Sales Rep set.</p>` : `<p class="k-sub" style="margin:8px 0 0">Quoted $ is the WhatConverts Sales Value on leads created in these 7 days.</p>`}` : '<p class="note">No rep activity in the last 7 days.</p>';
 }
 
 /* ── Ads data: latest week + 8-week charts ───────────────── */
@@ -475,7 +494,6 @@ async function loadChangeLog() {
 
 /* ── Freshness of the other data files ───────────────────── */
 function loadManifest(url, globalName, key, expected) {
-  window[globalName] = window[globalName] || { add(o) { if (o && o.kind === 'manifest') this.manifest = o; } };
   return loadScript([url + hourBust()]).then(ok => {
     const m = window[globalName] && window[globalName].manifest;
     FEED[key] = ok && m && m.dataThrough ? { through: m.dataThrough, late: m.dataThrough < expected() } : { missing: true, late: true };

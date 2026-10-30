@@ -15,6 +15,10 @@ The script prints CHANGED: <path> for every file that must be published and writ
 <out>/publish.json: [{path, expected_sha256, content_b64z}] ready for the Zapier action
 GitHubCLIAPI / code_action_githubcliapi__put_file_compressed (repo geckoss217/sharks, branch main).
 
+Also writes data/lead-timing/rep-value.js: per day (Denver date the lead was created) and per
+Sales Rep code, the count and total of the WhatConverts "Sales Value" field, for the recent window.
+Transactions and Appointments are left out (a Transaction's value is the booked job, not a quote).
+
 Rules (EC):
   * Lead = an inquiry. Leads from the same phone/email within 30 days collapse into one
     inquiry, timed at the first lead. Appointments and Transactions are never inquiries.
@@ -160,6 +164,31 @@ def build_events(rows):
     return inquiries, bookings
 
 
+def rep_values(rows, start):
+    """{day: {rep: [leads with a Sales Value, total Sales Value]}} for days >= start."""
+    days = defaultdict(dict)
+    for r in rows:
+        (lid, created, ltype, dup, quot, status, src, med, sval, qval, rep, stage) = r[:12]
+        if (src or "").lower() == "test" or stage == "Marketing-Sales Call":
+            continue
+        if ltype in ("Transaction", "Appointment"):
+            continue
+        try:
+            v = float(sval or 0)
+        except ValueError:
+            continue
+        if v <= 0:
+            continue
+        d = local(created).date()
+        if d < start:
+            continue
+        code = (rep or "").strip().upper() or "TBD"
+        cell = days[str(d)].setdefault(code, [0, 0.0])
+        cell[0] += 1
+        cell[1] = round(cell[1] + v, 2)
+    return {k: days[k] for k in sorted(days)}
+
+
 def pack(e, is_inq):
     day = (e["t"].date() - EPOCH).days
     flags = (1 if e.get("quot") else 0) + (2 if e.get("booked") else 0) if is_inq else 0
@@ -254,6 +283,9 @@ def main():
     ri = "".join(x for x in inq_p if day_of(x) >= pq)
     rb = "".join(x for x in bk_p if day_of(x) >= pq)
     write("recent.js", dict(kind="recent", **{"from": str(pq)}, to=str(today), inq=ri, bk=rb))
+
+    write("rep-value.js", dict(kind="repvalue", field="Sales Value", **{"from": str(pq)}, to=str(today),
+                               days=rep_values(rows, pq)))
 
     manifest.update(kind="manifest", asOf=dt.datetime.now(DEN).strftime("%Y-%m-%d %H:%M"),
                     dataThrough=str(today), firstDay=str(FIRST_DAY), firstBooking="2025-09-01",
