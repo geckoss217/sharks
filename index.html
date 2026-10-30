@@ -277,10 +277,29 @@ const hourBust = () => '?v=' + new Date().toISOString().slice(0, 13);
 window.LT = { add(o) { if (o && o.kind) this[o.kind] = o; } };
 window.KW = { add(o) { if (o && o.kind) this[o.kind] = o; } };
 // WhatConverts Sales Rep codes -> names used in the communication log
-const REP_CODES = { KTA: 'Karine Tellez', SMR: 'Silvia Ramos', SAM: 'Stiven Monjaras', DTJ: 'Dustin Jackson' };
+const REP_CODES = { KTA: 'Karine Tellez', SMR: 'Silvia Ramos', SAM: 'Stiven Monjaras', DTJ: 'Dustin Jackson', GAB: 'Gerardo Benavides' };
 const CODE_OF = Object.fromEntries(Object.entries(REP_CODES).map(([c, n]) => [n, c]));
 // Sales Value per rep per day (lead created date, MT), written by the nightly lead-timing build
 const REPVAL = loadScript(['/data/lead-timing/rep-value.js' + hourBust()]).then(ok => ok && window.LT.repvalue ? window.LT.repvalue : null);
+const dayDiff = (a, b) => Math.round((new Date(b + 'T12:00:00Z') - new Date(a + 'T12:00:00Z')) / 864e5);
+// Quote $ (row index 12) always comes from WhatConverts Sales Value: overwrite the log's value per rep/day.
+function applySalesValue(C, rv) {
+  const all = [...Object.values(C.RAW || {}), ...Object.values(C.QUEUE || {})];
+  for (const rows of all) for (const r of rows) { while (r.length < 15) r.push(0); r[12] = 0; }
+  if (!rv || !rv.days) return false;
+  for (const [name, rows] of Object.entries(C.RAW)) {
+    const code = CODE_OF[name]; if (!code) continue;
+    const byOff = new Map(rows.map(r => [r[0], r]));
+    for (const [d, reps] of Object.entries(rv.days)) {
+      if (!reps[code]) continue;
+      const off = dayDiff(d, C.AS_OF); if (off < 0) continue;
+      let r = byOff.get(off);
+      if (!r) { r = [off, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]; rows.push(r); byOff.set(off, r); }
+      r[12] = reps[code][1];
+    }
+  }
+  return true;
+}
 function salesValue(rv, code, from, to) {
   if (!rv || !rv.days) return null;
   let s = 0;
@@ -304,6 +323,8 @@ async function loadComm() {
     return;
   }
   FEED.comm = { through: C.AS_OF, late: C.AS_OF < dailyExpected() };
+  const rv = await REPVAL;
+  const haveSV = applySalesValue(C, rv);
   const RAW = C.RAW, QUEUE = C.QUEUE || {};
   const reps = Object.keys(RAW);
   const qKey = Object.keys(QUEUE)[0];
@@ -315,7 +336,7 @@ async function loadComm() {
     { l: 'Texts out',     f: r => g(r, 8), fmt: n0, m: 'so' },
     { l: 'Talk time',     f: r => g(r, 6) + g(r, 10), fmt: v => (v / 60).toFixed(1) + ' h', m: 'ttall' },
     { l: 'Quotes given',  f: r => g(r, 11), fmt: n0, m: 'qn' },
-    { l: 'Quote $',       f: r => g(r, 12), fmt: moneyK, m: 'q$' },
+    { l: 'Quote $',       f: r => g(r, 12), fmt: moneyK, m: 'q$', sv: true },
     { l: 'Bookings',      f: r => g(r, 13), fmt: n0, m: 'bn' },
     { l: 'Booked $',      f: r => g(r, 14), fmt: moneyK, m: 'b$' },
   ];
@@ -331,7 +352,8 @@ async function loadComm() {
     const vsLbl = period === 'week' ? 'prior 4 wks' : 'avg ' + dayName(day);
     let h = K.map(k => {
       const cur = teamSum(repRows, k.f, 0), base = typical(repRows, k.f);
-      return `<a class="kpi" href="/comm.html?m=${encodeURIComponent(k.m)}"><span class="k-label">${k.l}</span><span class="k-value">${k.fmt(cur)}</span>${delta(cur, base, vsLbl)}</a>`;
+      if (k.sv && !haveSV) return `<a class="kpi" href="/comm.html?m=${encodeURIComponent(k.m)}"><span class="k-label">${k.l}</span><span class="k-value">—</span><span class="delta">WhatConverts data not loaded</span></a>`;
+      return `<a class="kpi" href="/comm.html?m=${encodeURIComponent(k.m)}"${k.sv ? ' title="WhatConverts Sales Value on leads created in the period"' : ''}><span class="k-label">${k.l}</span><span class="k-value">${k.fmt(cur)}</span>${delta(cur, base, vsLbl)}</a>`;
     }).join('');
     if (qKey) {
       const ic = teamSum([qRows], r => g(r, 1), 0), ia = teamSum([qRows], r => g(r, 2), 0);
@@ -367,25 +389,24 @@ async function loadComm() {
     { l: 'Calls',     f: r => g(r, 4), fmt: n0 },
     { l: 'Texts',     f: r => g(r, 8), fmt: n0 },
     { l: 'Quotes',    f: r => g(r, 11), fmt: n0 },
-    { l: 'Quoted $',  wc: true, fmt: v => v == null ? '—' : money(v) },
+    { l: 'Quote $',   wc: true, f: r => g(r, 12), fmt: v => v == null ? '—' : money(v) },
     { l: 'Booked',    f: r => g(r, 13), fmt: n0 },
     { l: 'Booked $',  f: r => g(r, 14), fmt: money },
   ];
   const active = r => g(r, 1) + g(r, 4) + g(r, 6) + g(r, 7) + g(r, 8) + g(r, 9) + g(r, 10) > 0;
-  const rv = await REPVAL;
   const wFrom = addDays(day, -6);
   const bookedIdx = COLS.findIndex(c => c.l === 'Booked $');
-  const rows = reps.map(rp => ({ rp, v: COLS.map(c => c.wc ? (CODE_OF[rp] ? salesValue(rv, CODE_OF[rp], wFrom, day) : null) : sumRows(RAW[rp], 0, 6, c.f)), on: (RAW[rp] || []).some(r => r[0] <= 6 && active(r)) }))
+  const rows = reps.map(rp => ({ rp, v: COLS.map(c => c.wc && (!haveSV || !CODE_OF[rp]) ? null : sumRows(RAW[rp], 0, 6, c.f)), on: (RAW[rp] || []).some(r => r[0] <= 6 && active(r)) }))
                    .filter(x => x.on)
                    .sort((a, b) => b.v[bookedIdx] - a.v[bookedIdx] || (b.v[0] + b.v[1]) - (a.v[0] + a.v[1]));
-  const tot = COLS.map((c, i) => c.wc && !rv ? null : rows.reduce((s, x) => s + (x.v[i] || 0), 0));
-  const unassigned = rv ? salesValue(rv, 'TBD', wFrom, day) : 0;
+  const tot = COLS.map((c, i) => c.wc && !haveSV ? null : rows.reduce((s, x) => s + (x.v[i] || 0), 0));
+  const unassigned = haveSV ? salesValue(rv, 'TBD', wFrom, day) : 0;
   $('repSub').textContent = `${shortDate(addDays(day, -6))} – ${shortDate(day)} · reps with activity, sorted by booked $`;
   $('repTbl').innerHTML = rows.length ? `<table>
     <thead><tr><th scope="col">Rep</th>${COLS.map(c => `<th scope="col"${c.wc ? ' title="Total of the WhatConverts Sales Value field on this rep\'s leads created in these 7 days (Transactions not included)"' : ''}>${c.l}</th>`).join('')}</tr></thead>
     <tbody>${rows.map(x => `<tr><td><a href="/comm.html?rep=${encodeURIComponent(x.rp)}">${esc(x.rp)}</a></td>${x.v.map((v, i) => `<td>${COLS[i].fmt(v)}</td>`).join('')}</tr>`).join('')}</tbody>
     <tfoot><tr><td>Team</td>${tot.map((v, i) => `<td>${COLS[i].fmt(v)}</td>`).join('')}</tr></tfoot>
-  </table>${unassigned > 0 ? `<p class="k-sub" style="margin:8px 0 0">Quoted $ is the WhatConverts Sales Value on leads created in these 7 days. Another ${money(unassigned)} sits on leads with no Sales Rep set.</p>` : `<p class="k-sub" style="margin:8px 0 0">Quoted $ is the WhatConverts Sales Value on leads created in these 7 days.</p>`}` : '<p class="note">No rep activity in the last 7 days.</p>';
+  </table>${unassigned > 0 ? `<p class="k-sub" style="margin:8px 0 0">Quote $ is the WhatConverts Sales Value on leads created in these 7 days. Another ${money(unassigned)} sits on leads with no Sales Rep set.</p>` : `<p class="k-sub" style="margin:8px 0 0">Quote $ is the WhatConverts Sales Value on leads created in these 7 days.</p>`}` : '<p class="note">No rep activity in the last 7 days.</p>';
 }
 
 /* ── Ads data: latest week + 8-week charts ───────────────── */

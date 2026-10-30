@@ -273,7 +273,7 @@
       <div class="sect-head">
         <p class="eyebrow">Daily Activity</p>
         <h1 class="sect-title">Communication Summary</h1>
-        <p class="sect-sub">Calls and texts per rep from the daily communication log. Pick your initials and a metric — every number compares you to the team average for the same period. The EC-Sales toll-free queue is listed separately and is not counted in the team average. Queue calls a rep personally answered show under the Queue metrics, or use an &ldquo;incl. queue&rdquo; metric for their full workload.</p>
+        <p class="sect-sub">Calls and texts per rep from the daily communication log. Pick your initials and a metric — every number compares you to the team average for the same period. The EC-Sales toll-free queue is listed separately and is not counted in the team average. Queue calls a rep personally answered show under the Queue metrics, or use an &ldquo;incl. queue&rdquo; metric for their full workload. Quote $ is the WhatConverts Sales Value on the rep&rsquo;s leads created that day.</p>
       </div>
 
       <div id="commbody">
@@ -324,6 +324,37 @@
 const DATA_BASE = 'https://sharks-data-geckoss217-3432s-projects.vercel.app';
 const DATA_URLS = [DATA_BASE + '/sharks_dashboard/data.js', DATA_BASE + '/data.js'];
 
+// Quote $ comes from the WhatConverts Sales Value field (nightly file from the lead-timing build),
+// matched to reps by their WhatConverts Sales Rep code. It replaces the log's own quote $ column.
+window.LT = { add(o) { if (o && o.kind) this[o.kind] = o; } };
+const REP_CODES = { KTA: 'Karine Tellez', SMR: 'Silvia Ramos', SAM: 'Stiven Monjaras', DTJ: 'Dustin Jackson', GAB: 'Gerardo Benavides' };
+const CODE_OF = Object.fromEntries(Object.entries(REP_CODES).map(([c, n]) => [n, c]));
+const dayDiff = (a, b) => Math.round((new Date(b + 'T12:00:00Z') - new Date(a + 'T12:00:00Z')) / 864e5);
+function applySalesValue(C, rv) {
+  const all = [...Object.values(C.RAW || {}), ...Object.values(C.QUEUE || {})];
+  for (const rows of all) for (const r of rows) { while (r.length < 15) r.push(0); r[12] = 0; }
+  if (!rv || !rv.days) return false;
+  for (const [name, rows] of Object.entries(C.RAW)) {
+    const code = CODE_OF[name]; if (!code) continue;
+    const byOff = new Map(rows.map(r => [r[0], r]));
+    for (const [d, reps] of Object.entries(rv.days)) {
+      if (!reps[code]) continue;
+      const off = dayDiff(d, C.AS_OF); if (off < 0) continue;
+      let r = byOff.get(off);
+      if (!r) { r = [off, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]; rows.push(r); byOff.set(off, r); }
+      r[12] = reps[code][1];
+    }
+  }
+  return true;
+}
+function withSalesValue() {
+  const s = document.createElement('script');
+  s.src = '/data/lead-timing/rep-value.js?v=' + new Date().toISOString().slice(0, 13);
+  const go = () => { if (window.COMM && window.COMM.AS_OF) window.SV_OK = applySalesValue(window.COMM, window.LT.repvalue); commInit(); };
+  s.onload = go; s.onerror = go;
+  document.head.appendChild(s);
+}
+
 function commInit(){
   const $ = id => document.getElementById(id);
   const C = window.COMM || {};
@@ -356,7 +387,7 @@ function commInit(){
     {k:'im',  label:'Inbound Missed',     f:r=>r[3], dec:0},
     {k:'si',  label:'SMS Received',       f:r=>r[7], dec:0},
     {k:'qn',  label:'Quotes Given',        f:r=>q(r,11), dec:0},
-    {k:'q$',  label:'Quote $',             f:r=>q(r,12), dec:0, cur:true},
+    {k:'q$',  label:'Quote $ (WhatConverts Sales Value)', f:r=>q(r,12), dec:0, cur:true},
     {k:'bn',  label:'Bookings',            f:r=>q(r,13), dec:0},
     {k:'b$',  label:'Booked $',            f:r=>q(r,14), dec:0, cur:true},
   ];
@@ -543,7 +574,7 @@ function commInit(){
   const s = document.createElement('script');
   // hourly cache-buster so a late refresh shows up the same day
   s.src = DATA_URLS[i] + '?v=' + new Date().toISOString().slice(0,13);
-  s.onload = commInit;
+  s.onload = withSalesValue;
   s.onerror = () => (i + 1 < DATA_URLS.length) ? load(i + 1) : commInit(); // last resort: empty-state note
   document.head.appendChild(s);
 })(0);
