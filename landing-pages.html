@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Landing Page Concepts · Sharks</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦈</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy-deep: #0a0f1e; --navy: #1e2a3a; --teal: #00a19a; --teal-ink: #7fdcd5; --orange: #ff8a33;
+    --white: #fff; --ink2: #dbe3ee; --muted: #9aa7b8; --line: rgba(255,255,255,0.08); --line-strong: rgba(255,255,255,0.16);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Poppins', sans-serif; background: var(--navy-deep); color: var(--white); min-height: 100vh; display: flex; flex-direction: column; font-size: 14px; line-height: 1.5; }
+  a { color: var(--teal-ink); }
+  header { background: var(--white); padding: 12px 28px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+  header img { height: 44px; width: auto; display: block; }
+  .badge { background: var(--navy-deep); color: var(--white); font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; padding: 7px 16px; border-radius: 50px; }
+  main { flex: 1; width: 100%; max-width: 1320px; margin: 0 auto; padding: 24px 28px 48px; display: flex; flex-direction: column; gap: 18px; }
+  .crumb { font-size: 12.5px; }
+  .crumb a { text-decoration: none; font-weight: 600; }
+  .head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px; }
+  .head h1 { font-size: 26px; font-weight: 800; line-height: 1.2; }
+  .head p { color: var(--muted); font-size: 13.5px; margin-top: 2px; max-width: 46em; }
+  .filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  select { font: 500 13px 'Poppins', sans-serif; color: var(--ink2); background: var(--navy); border: 1px solid var(--line-strong); border-radius: 50px; min-height: 38px; padding: 0 14px; }
+  .btn { display: inline-flex; align-items: center; min-height: 38px; padding: 0 16px; border-radius: 50px; font: 600 13px 'Poppins', sans-serif; text-decoration: none; border: 1px solid var(--line-strong); color: var(--ink2); background: transparent; cursor: pointer; }
+  .btn:hover { border-color: var(--teal); color: var(--white); }
+  .btn.on { background: var(--teal); border-color: var(--teal); color: var(--white); }
+
+  .grid { display: grid; grid-template-columns: minmax(300px, 400px) minmax(0, 1fr); gap: 18px; align-items: start; }
+  .list { display: flex; flex-direction: column; gap: 10px; }
+  .card { text-align: left; width: 100%; font: inherit; color: inherit; background: var(--navy); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; cursor: pointer; display: flex; flex-direction: column; gap: 6px; }
+  .card:hover, .card:focus-visible { border-color: var(--teal); outline: none; }
+  .card[aria-current="true"] { border-color: var(--orange); }
+  .card h2 { font-size: 15px; font-weight: 700; }
+  .card .meta { display: flex; flex-wrap: wrap; gap: 6px; }
+  .pill { font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 3px 9px; border-radius: 50px; background: rgba(255,255,255,0.07); color: var(--ink2); }
+  .pill.draft { color: var(--muted); }
+  .pill.review { background: rgba(255,138,51,0.15); color: var(--orange); }
+  .pill.testing { background: rgba(0,161,154,0.18); color: var(--teal-ink); }
+  .pill.winner { background: rgba(79,209,165,0.2); color: #4fd1a5; }
+  .pill.archived { opacity: .55; }
+  .card .hyp { color: var(--muted); font-size: 12.5px; }
+
+  .preview { background: var(--navy); border: 1px solid var(--line); border-radius: 16px; padding: 16px; position: sticky; top: 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+  .p-top { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; align-items: center; }
+  .p-top h2 { font-size: 16px; font-weight: 700; }
+  .p-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+  dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 14px; font-size: 13px; }
+  dt { color: var(--muted); }
+  dd { color: var(--ink2); }
+  .frame { background: #0f1625; border-radius: 12px; display: flex; justify-content: center; overflow: hidden; border: 1px solid var(--line); }
+  .frame iframe { border: 0; width: 100%; height: 72vh; background: #fff; display: block; transition: width .2s; }
+  .frame.mobile iframe { width: 390px; max-width: 100%; }
+  .note { color: var(--muted); font-size: 13px; padding: 20px 4px; }
+  footer { border-top: 1px solid var(--line); padding: 18px 24px; text-align: center; color: var(--muted); font-size: 12.5px; }
+  footer strong { color: var(--white); font-weight: 600; }
+  @media (max-width: 960px) {
+    main { padding: 20px 16px 32px; }
+    .grid { grid-template-columns: minmax(0, 1fr); }
+    .preview { position: static; }
+    .frame iframe { height: 64vh; }
+  }
+</style>
+</head>
+<body>
+  <header>
+    <a href="/"><img src="https://emergencycleanings.com/wp-content/uploads/2026/07/Final-logo-for-buyer-png.png" alt="Emergency Cleanings"></a>
+    <span class="badge">Internal · Team Only</span>
+  </header>
+
+  <main>
+    <div class="crumb"><a href="/">&larr; Sharks</a></div>
+    <div class="head">
+      <div>
+        <h1>Landing Page Concepts</h1>
+        <p>Every landing page idea we are drafting or testing, in one place. Pick a concept to preview it on desktop or phone. To add or change one, ask Claude.</p>
+      </div>
+      <div class="filters">
+        <select id="fStatus" aria-label="Status"><option value="">All statuses</option></select>
+        <select id="fService" aria-label="Service"><option value="">All services</option></select>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="list" id="list"><p class="note">Loading concepts…</p></div>
+      <section class="preview" id="preview" aria-live="polite"><p class="note">Pick a concept to preview it.</p></section>
+    </div>
+  </main>
+
+  <footer><strong>Emergency Cleanings</strong> · Internal team dashboard · Not for public distribution</footer>
+
+<script>
+const LP_BASE = 'https://ec-landing-pages.vercel.app';
+const STATUS_ORDER = ['testing', 'review', 'draft', 'winner', 'archived'];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const $ = id => document.getElementById(id);
+let ALL = [], current = null, view = 'desktop';
+
+const url = c => `${LP_BASE}/concepts/${encodeURIComponent(c.slug)}`;
+
+function fillFilters() {
+  const statuses = [...new Set(ALL.map(c => c.status))].sort((a, b) => STATUS_ORDER.indexOf(a) - STATUS_ORDER.indexOf(b));
+  const services = [...new Set(ALL.map(c => c.service))].sort();
+  $('fStatus').innerHTML += statuses.map(s => `<option>${esc(s)}</option>`).join('');
+  $('fService').innerHTML += services.map(s => `<option>${esc(s)}</option>`).join('');
+}
+
+function renderList() {
+  const st = $('fStatus').value, sv = $('fService').value;
+  const rows = ALL.filter(c => (!st || c.status === st) && (!sv || c.service === sv))
+    .sort((a, b) => (STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status)) || String(b.created).localeCompare(a.created));
+  $('list').innerHTML = rows.length ? rows.map(c => `
+    <button class="card" type="button" data-slug="${esc(c.slug)}" aria-current="${current && current.slug === c.slug}">
+      <h2>${esc(c.title)}</h2>
+      <div class="meta"><span class="pill ${esc(c.status)}">${esc(c.status)}</span><span class="pill">${esc(c.service)}</span></div>
+      ${c.hypothesis ? `<div class="hyp">${esc(c.hypothesis)}</div>` : ''}
+    </button>`).join('') : '<p class="note">No concepts match these filters.</p>';
+}
+
+function renderPreview() {
+  const c = current;
+  if (!c) return;
+  $('preview').innerHTML = `
+    <div class="p-top">
+      <h2>${esc(c.title)}</h2>
+      <div class="p-actions">
+        <button class="btn ${view === 'desktop' ? 'on' : ''}" type="button" data-view="desktop">Desktop</button>
+        <button class="btn ${view === 'mobile' ? 'on' : ''}" type="button" data-view="mobile">Phone</button>
+        <a class="btn" href="${url(c)}" target="_blank" rel="noopener">Open &nearr;</a>
+        <button class="btn" type="button" id="copy">Copy link</button>
+      </div>
+    </div>
+    <dl>
+      <dt>Status</dt><dd>${esc(c.status)}</dd>
+      <dt>Service</dt><dd>${esc(c.service)}</dd>
+      ${c.audience ? `<dt>Audience</dt><dd>${esc(c.audience)}</dd>` : ''}
+      ${c.hypothesis ? `<dt>Testing</dt><dd>${esc(c.hypothesis)}</dd>` : ''}
+      ${c.owner ? `<dt>Owner</dt><dd>${esc(c.owner)}</dd>` : ''}
+      ${c.created ? `<dt>Created</dt><dd>${esc(c.created)}</dd>` : ''}
+      ${c.live_url ? `<dt>Live at</dt><dd><a href="${esc(c.live_url)}" target="_blank" rel="noopener">${esc(c.live_url)}</a></dd>` : ''}
+      ${c.notes ? `<dt>Notes</dt><dd>${esc(c.notes)}</dd>` : ''}
+    </dl>
+    <div class="frame ${view}"><iframe src="${url(c)}" title="Preview of ${esc(c.title)}" loading="lazy"></iframe></div>`;
+}
+
+function select(slug) {
+  current = ALL.find(c => c.slug === slug) || null;
+  history.replaceState(null, '', current ? `?c=${encodeURIComponent(slug)}` : location.pathname);
+  renderList(); renderPreview();
+}
+
+$('list').addEventListener('click', e => { const b = e.target.closest('.card'); if (b) select(b.dataset.slug); });
+$('preview').addEventListener('click', e => {
+  const v = e.target.closest('[data-view]');
+  if (v) { view = v.dataset.view; renderPreview(); }
+  if (e.target.id === 'copy' && current) {
+    navigator.clipboard.writeText(url(current)).then(() => { e.target.textContent = 'Copied'; setTimeout(() => e.target.textContent = 'Copy link', 1500); });
+  }
+});
+['fStatus', 'fService'].forEach(id => $(id).addEventListener('change', renderList));
+
+fetch(`${LP_BASE}/concepts.json`, { cache: 'no-store' })
+  .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+  .then(d => {
+    ALL = (d.concepts || []).filter(c => c.slug);
+    fillFilters();
+    const want = new URLSearchParams(location.search).get('c');
+    if (want && ALL.some(c => c.slug === want)) select(want); else renderList();
+  })
+  .catch(() => { $('list').innerHTML = '<p class="note">Could not load the concept list. The landing pages site may be redeploying; try again in a minute.</p>'; });
+</script>
+</body>
+</html>
